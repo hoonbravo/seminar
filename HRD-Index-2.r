@@ -11,7 +11,6 @@
 ##library(Zelig)
 library(tidyverse)
 library(Zelig)
-library(zeligverse)
 library(readxl)
 library(dplyr)
 library(writexl)
@@ -24,7 +23,7 @@ library(sensitivityfull)
 library(sensitivitymw)
 
 ##cor, emp merge
-work<-read.table("C:\\Users\\HOON\\Desktop\\HCCP\\5. TXT Data\\HCCP_Head_7th.txt", header=T, fill=T, sep="\t") %>% 
+work<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_Head_7th.txt", header=T, fill=T, sep="\t") %>% 
   select(C7C02_01_08, ##direct fee
          C7C01_07_01,C7C01_07_02,C7C01_07_05,C7C01_07_06,C7C01_07_09,C7C01_07_10,
          C7C01_07_13,C7C01_07_14,C7C01_07_17,C7C01_07_18,C7C01_07_21,C7C01_07_22, ##CD
@@ -36,6 +35,12 @@ work<-read.table("C:\\Users\\HOON\\Desktop\\HCCP\\5. TXT Data\\HCCP_Head_7th.txt
          C7D05_01,C7D05_02,C7D05_03,C7D05_04, ##HRM
          C7_ID1,C7_IND1,C7B02_01_04,C7B02_01_01,C7A01_01,C7D07_02,C7B02_03_04,C7B02_03_05,C7B02_03_06,C7B01_07,C7D01_05,C7D01_07,   ##CONTROL
          C7C02_03_01,C7C02_03_02,C7C02_03_03,C7C02_03_04,C7C02_03_05) ##succ
+
+sell<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_KIS.txt", header=T, fill=T, sep="\t") %>% 
+  filter(YYYY==2017) %>% 
+  select(ID1, K_121000) %>% 
+  rename("C7_ID1"="ID1")
+sell$K_121000<-log(sell$K_121000)
 ##Cleaning
 
 ## avg of succ
@@ -58,7 +63,7 @@ work$HE<-(work$C7B02_03_04+work$C7B02_03_05+work$C7B02_03_06)/work$C7B02_01_01
 ## nozo
 work$C7D07_02<-2-work$C7D07_02
 ##direct fee
-work<-work[(!work$C7C02_01_08==-8),] %>% ##remove direct fee -8,-9
+work<-work[(!work$C7C02_01_08==-8),]  ##remove direct fee -8,-9
 work<-work[(!work$C7C02_01_08==-9),] 
 work<-work[(!work$C7C02_01_08==0),] 
 
@@ -159,11 +164,12 @@ work$X8<-(work$X8_1+work$X8_2+work$X8_3+work$X8_4)/4
 ## hist(index$treat)
 
 ##new data
-index<-select(work,succ,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,X1,X2,X3,X4,X5,X6,X7,X8) ######################
+index<-select(work,C7_ID1,succ,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,X1,X2,X3,X4,X5,X6,X7,X8) ######################
+index<-merge(index, sell, by="C7_ID1")
 index$treat<-index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
 index<-na.omit(index)
 ## gps
-lmGPS=lm(treat~C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07, index)  ##########################
+lmGPS=lm(treat~C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
 index$gps=dnorm(index$treat,
                 mean=lmGPS$fitted,
                 sd=summary(lmGPS)$sigma)
@@ -175,7 +181,7 @@ index$IPW=index$numerator/index$gps
 
 stddata=index %>% 
   mutate_at(
-    vars(C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,treat), ##############
+    vars(C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,K_121000,treat), ##############
     function(x){(x-mean(x))/sd(x)}
   )
 
@@ -189,6 +195,7 @@ lm(HE~treat,stddata)$coef %>% round(4)
 lm(C7B01_07~treat,stddata)$coef %>% round(4)
 lm(C7D01_05~treat,stddata)$coef %>% round(4)
 lm(C7D01_07~treat,stddata)$coef %>% round(4)
+lm(K_121000~treat,stddata)$coef %>% round(4)
 
 lm(C7_IND1~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(emplnum~treat,stddata, weights=IPW)$coef %>% round(4)
@@ -199,9 +206,10 @@ lm(HE~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7B01_07~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4)
 #IPW
 set.seed(12)
-z_out_ipw=zelig(succ~treat+C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07, ######## 
+z_out_ipw=zelig(succ~treat+C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
                 data=index,
                 model="ls",
                 weights="IPW",
@@ -230,7 +238,7 @@ IPW_estimate=Table_Sim10000 %>%
 IPW_estimate
 
 ##Simple OLS
-z_out_ols=zelig(succ~treat+C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07,  ############## 
+z_out_ols=zelig(succ~treat+C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
                 data=index,
                 model="ls",
                 cite=FALSE)
