@@ -9,13 +9,12 @@
 ##devtools::install_github('IQSS/Zelig')
 
 ##library(Zelig)
+library(Hmisc) 
 library(tidyverse)
 library(Zelig)
 library(readxl)
 library(dplyr)
-library(writexl)
 ##important? packages
-library(Hmisc) 
 library(nnet) 
 library(MatchIt) 
 library(cobalt) 
@@ -242,7 +241,7 @@ z_out_ols=zelig(succ~treat+C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07
                 data=index,
                 model="ls",
                 cite=FALSE)
-
+zelig2est(z_out_ipw)
 Table_Sim10000=data.frame()
 for(i in 1:length(range_treat)){
   X=setx(z_out_ols,treat=range_treat[i],data=index) ##mydata?
@@ -278,3 +277,27 @@ bind_rows(OLS_estimate %>%  mutate(model="OLS"),
   theme_bw()+
   theme(legend.position = "top")
 ## write_xlsx(treat,path="C:\\Users\\HOON\\Desktop\\HCCP\\merge.xlsx")
+
+####Hirano-Imbens
+hi_sample <- function(N){
+  emplnum <- rexp(N)
+  C7B01_07 <- rexp(N)
+  C7D01_05 <- rexp(N)
+  C7D01_07 <- rexp(N)
+  K_121000 <- rexp(N)
+  treat <- rexp(N, emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000)
+  gps <- (emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000) * exp(-(emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000) * treat)
+  succ <- treat + gps + rnorm(N)
+  hi_index <- data.frame(cbind(emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000, treat, gps, succ))
+  return(hi_data)
+}
+
+hi_estimate <- hi_est(succ,
+                      treat,
+                      treat_formula = treat ~ C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07+K_121000,
+                      outcome_formula = succ ~ treat + I(treat^2) + gps + I(gps^2) + treat * gps,
+                      data = index,
+                      grid_val = quantile(hi_sim_data$T, probs = seq(0, .95, by = 0.01)),
+                      treat_mod = "Gamma",
+                      link_function = "inverse")
+summary(hi_estimate)
