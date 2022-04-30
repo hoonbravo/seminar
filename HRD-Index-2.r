@@ -7,19 +7,21 @@
 ## install.packages("sensitivityfull")
 ## devtools::install_github("vdorie/treatSens")
 ##devtools::install_github('IQSS/Zelig')
-
+install.packages("BayesTree")
 ##library(Zelig)
 library(Hmisc) 
 library(tidyverse)
 library(Zelig)
 library(readxl)
 library(dplyr)
+library(writexl)
 ##important? packages
 library(nnet) 
 library(MatchIt) 
 library(cobalt) 
 library(sensitivityfull) 
 library(sensitivitymw)
+library(causaldrf)
 
 ##cor, emp merge
 work<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_Head_7th.txt", header=T, fill=T, sep="\t") %>% 
@@ -43,7 +45,7 @@ sell$K_121000<-log(sell$K_121000)
 ##Cleaning
 
 ## avg of succ
-work$succ<-(work$C7C02_03_01+work$C7C02_03_02)/2
+work$succ<-(work$C7C02_03_02)
 
 ##control, sort
 work$C7_IND1<-ifelse(work$C7_IND1==1,1,0)
@@ -134,6 +136,7 @@ work$X6_3<-ifelse(work$C7C01_03==1,1,0)
 work$X6<-(work$X6_1+work$X6_2+work$X6_3)/4
 ##ENVIR
 work$X7_1<-6-work$C7C02_04_01
+
 work$X7_2<-6-work$C7C02_04_02
 work$X7_3<-6-work$C7C02_04_04
 
@@ -168,7 +171,7 @@ index<-merge(index, sell, by="C7_ID1")
 index$treat<-index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
 index<-na.omit(index)
 ## gps
-lmGPS=lm(treat~C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
+lmGPS=lm(treat~C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
 index$gps=dnorm(index$treat,
                 mean=lmGPS$fitted,
                 sd=summary(lmGPS)$sigma)
@@ -178,9 +181,15 @@ index$numerator=dnorm(index$treat,
 
 index$IPW=index$numerator/index$gps
 
+###### read
+###### index
+
+write_xlsx(index,path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
+index<-read_excel(path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
+
 stddata=index %>% 
   mutate_at(
-    vars(C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,K_121000,treat), ##############
+    vars(C7_IND1,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000,treat), ##############
     function(x){(x-mean(x))/sd(x)}
   )
 
@@ -208,7 +217,7 @@ lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4)
 #IPW
 set.seed(12)
-z_out_ipw=zelig(succ~treat+C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
+z_out_ipw=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
                 data=index,
                 model="ls",
                 weights="IPW",
@@ -237,11 +246,11 @@ IPW_estimate=Table_Sim10000 %>%
 IPW_estimate
 
 ##Simple OLS
-z_out_ols=zelig(succ~treat+C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
+z_out_ols=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
                 data=index,
                 model="ls",
                 cite=FALSE)
-zelig2est(z_out_ipw)
+
 Table_Sim10000=data.frame()
 for(i in 1:length(range_treat)){
   X=setx(z_out_ols,treat=range_treat[i],data=index) ##mydata?
@@ -279,25 +288,51 @@ bind_rows(OLS_estimate %>%  mutate(model="OLS"),
 ## write_xlsx(treat,path="C:\\Users\\HOON\\Desktop\\HCCP\\merge.xlsx")
 
 ####Hirano-Imbens
-hi_sample <- function(N){
-  emplnum <- rexp(N)
-  C7B01_07 <- rexp(N)
-  C7D01_05 <- rexp(N)
-  C7D01_07 <- rexp(N)
-  K_121000 <- rexp(N)
-  treat <- rexp(N, emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000)
-  gps <- (emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000) * exp(-(emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000) * treat)
-  succ <- treat + gps + rnorm(N)
-  hi_index <- data.frame(cbind(emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000, treat, gps, succ))
-  return(hi_data)
-}
-
 hi_estimate <- hi_est(succ,
                       treat,
-                      treat_formula = treat ~ C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_07+K_121000,
-                      outcome_formula = succ ~ treat + I(treat^2) + gps + I(gps^2) + treat * gps,
+                      treat_formula = treat ~ C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,
+                      outcome_formula = succ~treat+gps+treat * gps,
+                      #succ~treat+I(treat^2)+gps+I(gps^2)+treat * gps,
                       data = index,
-                      grid_val = quantile(hi_sim_data$T, probs = seq(0, .95, by = 0.01)),
-                      treat_mod = "Gamma",
-                      link_function = "inverse")
+                      grid_val = seq(0,8, by = 1),
+                      treat_mod = "Normal")
 summary(hi_estimate)
+plot(hi_estimate[[1]])
+summary(lm(succ~treat+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, data=index))
+
+##### using_causaldrf
+reg_estimate <- reg_est(Y = succ,
+                        treat = treat,
+                        covar_formula = ~ C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,
+                        covar_lin_formula = ~ 1,
+                        covar_sq_formula = ~ 1,
+                        data = index,
+                        degree = 2,
+                        wt = index$IPW,
+                        method = "different")
+
+reg_estimate
+
+
+library(BayesTree)
+
+bart_estimate <- bart_est(Y = succ,
+                          treat = treat,
+                          outcome_formula = succ ~ treat+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,
+                          data = index,
+                          grid_val = seq(0,8, by = 1))
+
+iw_estimate <- iw_est(Y = succ,
+                      treat = treat,
+                      treat_formula = treat ~ C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,
+                      data = index,
+                      grid_val = seq(0,8, by = 1),
+                      bandw = 2 * bw.SJ(index$treat),
+                      treat_mod = "Normal")
+summary(iw_estimate)
+library(ggplot2)
+plot(iw_estimate[[2]])
+ggplot(data=index, aes(x=treat, y=iw_estimate))
+summary(iw_estimate)
+summary(bart_estimate)
+

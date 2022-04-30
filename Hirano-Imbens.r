@@ -39,3 +39,38 @@ pf_estimate <- reg_est(Y = TOTALEXP,
                        degree = 2,
                        wt = full_data_orig$HSQACCWT,
                        method = "same")
+
+
+example_data <- sim_data
+
+hi_list <- hi_est(Y = Y,
+                  treat = T,
+                  treat_formula = T ~ B.1 + B.2 + B.3 + B.4 + B.5 + B.6 + B.7 + B.8,
+                  outcome_formula = Y ~ T + I(T^2) + gps + I(gps^2) + T * gps,
+                  data = example_data,
+                  grid_val = seq(8, 16, by = 1),
+                  treat_mod = "Normal")
+
+sample_index <- sample(1:1000, 100)
+
+plot(index$treat,
+     index$succ,
+     xlab = "T",
+     ylab = "Y",
+     main = "hi estimate")
+
+lines(seq(0, 8, by = 1),
+      hi_estimate$param,
+      lty = 2,
+      lwd = 2,
+      col = "blue")
+
+legend('bottomright',
+       "hi estimate",
+       lty=2,
+       lwd = 2,
+       col = "blue",
+       bty='Y',
+       cex=1)
+
+rm(example_data, hi_list, sample_index)
