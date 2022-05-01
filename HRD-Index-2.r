@@ -45,7 +45,7 @@ sell$K_121000<-log(sell$K_121000)
 ##Cleaning
 
 ## avg of succ
-work$succ<-(work$C7C02_03_02)
+work$succ<-(work$C7C02_03_01+work$C7C02_03_02)/2
 
 ##control, sort
 work$C7_IND1<-ifelse(work$C7_IND1==1,1,0)
@@ -172,6 +172,8 @@ index$treat<-index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+inde
 index<-na.omit(index)
 ## gps
 lmGPS=lm(treat~C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
+summary(lmGPS)
+
 index$gps=dnorm(index$treat,
                 mean=lmGPS$fitted,
                 sd=summary(lmGPS)$sigma)
@@ -180,26 +182,45 @@ index$numerator=dnorm(index$treat,
                       sd=sd(index$treat))
 
 index$IPW=index$numerator/index$gps
-
+hist(index$gps)
+hist(index$numerator)
+hist(index$IPW)
 ###### read
 ###### index
 
 write_xlsx(index,path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 index<-read_excel(path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
+index_hi<-select(index,succ,treat,C7_IND1,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000)
 
+##hist
+hist(index$succ)
+hist(index$C7_IND1)
+hist(index$emplnum)
+hist(log(index$percent))  ###log
+hist(index$C7A01_01)
+hist(index$C7D07_02)  ####no
+hist(index$HE)
+hist(index$C7B01_07)
+hist(index$C7D01_05)
+hist(index$C7D01_07)
+hist(index$K_121000)
+hist(index$gps)
+plot(index$treat,index$succ)
+##
 stddata=index %>% 
   mutate_at(
-    vars(C7_IND1,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000,treat), ##############
+    vars(C7_IND1,percent,C7A01_01,C7D07_02,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000,treat), ##############
     function(x){(x-mean(x))/sd(x)}
   )
 
+
 ##standarized beta
-lm(C7_IND1~treat,stddata)$coef %>% round(4)
+lm(C7_IND1~treat,stddata)$coef %>% round(4) ##low
 lm(emplnum~treat,stddata)$coef %>% round(4)
-lm(percent~treat,stddata)$coef %>% round(4)
-lm(C7A01_01~treat,stddata)$coef %>% round(4)
-lm(C7D07_02~treat,stddata)$coef %>% round(4)
-lm(HE~treat,stddata)$coef %>% round(4)
+lm(percent~treat,stddata)$coef %>% round(4) ##low
+lm(C7A01_01~treat,stddata)$coef %>% round(4) ##low
+lm(C7D07_02~treat,stddata)$coef %>% round(4) ##low
+lm(HE~treat,stddata)$coef %>% round(4) ##low
 lm(C7B01_07~treat,stddata)$coef %>% round(4)
 lm(C7D01_05~treat,stddata)$coef %>% round(4)
 lm(C7D01_07~treat,stddata)$coef %>% round(4)
@@ -215,6 +236,8 @@ lm(C7B01_07~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4)
+
+summary(lm(succ~treat+C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index))  ##########################
 #IPW
 set.seed(12)
 z_out_ipw=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
@@ -288,15 +311,18 @@ bind_rows(OLS_estimate %>%  mutate(model="OLS"),
 ## write_xlsx(treat,path="C:\\Users\\HOON\\Desktop\\HCCP\\merge.xlsx")
 
 ####Hirano-Imbens
+index_no_gps<-subset(index,select=-gps)
 hi_estimate <- hi_est(succ,
                       treat,
                       treat_formula = treat ~ C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,
-                      outcome_formula = succ~treat+gps+treat * gps,
+                      outcome_formula = succ~treat+gps+treat*gps,
                       #succ~treat+I(treat^2)+gps+I(gps^2)+treat * gps,
-                      data = index,
+                      #succ~treat+gps+treat*gps,
+                      data = index_hi,
                       grid_val = seq(0,8, by = 1),
                       treat_mod = "Normal")
 summary(hi_estimate)
+hi_estimate[[1]]
 plot(hi_estimate[[1]])
 summary(lm(succ~treat+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, data=index))
 

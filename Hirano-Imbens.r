@@ -16,6 +16,74 @@ hi_sample <- function(N){
   hi_data <- data.frame(cbind(X1, X2, T, gps, Y))
   return(hi_data)
 }
+
+add_spl_estimate <- add_spl_est(Y = Y,
+                                treat = T,
+                                treat_formula = T ~ X1 + X2,
+                                data = hi_sim_data,
+                                grid_val = quantile(hi_sim_data$T,
+                                                    probs = seq(0, .95, by = 0.01)),
+                                knot_num = 3,
+                                treat_mod = "Gamma",
+                                link_function = "inverse")
+gam_estimate <- gam_est(Y = Y,
+                        treat = T,
+                        treat_formula = T ~ X1 + X2,
+                        data = hi_sim_data,
+                        grid_val = quantile(hi_sim_data$T,
+                                            probs = seq(0, .95, by = 0.01)),
+                        treat_mod = "Gamma",
+                        link_function = "inverse")
+                        
+hi_estimate <- hi_est(Y = Y,
+                      treat = T,
+                      treat_formula = T ~ X1 + X2,
+                      outcome_formula = Y ~ T + I(T^2) +
+                        gps + I(gps^2) + T * gps,
+                      data = hi_sim_data,
+                      grid_val = quantile(hi_sim_data$T,
+                                          probs = seq(0, .95, by = 0.01)),
+                      treat_mod = "Gamma",
+                      link_function = "inverse")
+
+iptw_estimate <- iptw_est(Y = Y,
+                          treat = T,
+                          treat_formula = T ~ X1 + X2,
+                          numerator_formula = T ~ 1,
+                          data = hi_sim_data,
+                          degree = 2,
+                          treat_mod = "Gamma",
+                          link_function = "inverse")
+
+t(p_val_bal_cond)
+hi_sim_data <- hi_sample(1000)
+head(hi_sim_data)
+
+###trial
+lmGPS=lm(packyears~AGESMOKE+LASTAGE+MALE, nm)  ##########################
+summary(lmGPS)
+
+stddata2=nm %>% 
+  mutate_at(
+    vars(packyears, AGESMOKE,LASTAGE,MALE,HSQACCWT,TOTALEXP), ##############
+    function(x){(x-mean(x))/sd(x)}
+  )
+
+lm(AGESMOKE~packyears,nm)$coef %>% round(4) ##low
+lm(LASTAGE~packyears,stddata2)$coef %>% round(4) ##low
+lm(MALE~packyears,stddata2)$coef %>% round(4) ##low
+
+
+set.seed(301)
+hi_sample <- function(N){
+  X1 <- rexp(N)
+  X2 <- rexp(N)
+  T <- rexp(N, X1 + X2)
+  gps <- (X1 + X2) * exp(-(X1 + X2) * T)
+  Y <- T + gps + rnorm(N)
+  hi_data <- data.frame(cbind(X1, X2, T, gps, Y))
+  return(hi_data)
+}
 hi_sim_data <- hi_sample(1000)
 head(hi_sim_data)
 sim = hi_sim_data
