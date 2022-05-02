@@ -98,7 +98,7 @@ work %>% filter(C7D05_01 %in% c(1,2)) %>% ##remove HRM -8, -9
 ##cost
 work$X1_1<-1000000*work$C7C02_01_08/work$C7B02_01_01
 work$X1_2<-ifelse(work$X1_1>1,work$X1_1,0)
-work$X1<-log(work$X1_1)/log(10000000)
+work$X1<-3*log(work$X1_1)/log(10000000)
 
 ##TD
 work$X2_1<-ifelse(work$C7C01_07_01==2,0,ifelse(work$C7C01_07_02/work$C7B02_01_01<0.25,1,ifelse(work$C7C01_07_02/work$C7B02_01_01<0.50,2,ifelse(work$C7C01_07_02/work$C7B02_01_01<0.75,3,4))))
@@ -245,7 +245,7 @@ z_out_ipw=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, ########
                 model="ls",
                 weights="IPW",
                 cite=FALSE)
-
+z_out_ipw
 Table_Sim10000=data.frame()
 range_treat=quantile(index$treat,prob=0.1*(1:9))
 for(i in 1:length(range_treat)){
