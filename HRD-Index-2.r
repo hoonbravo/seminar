@@ -6,12 +6,10 @@
 ## install.packages("sensitivitymw")
 ## install.packages("sensitivityfull")
 ## devtools::install_github("vdorie/treatSens")
-## devtools::install_github('IQSS/Zelig')
+##devtools::install_github('IQSS/Zelig')
 ## install.packages("BayesTree")
-## install.packages("rgl")
 ##library(Zelig)
-##install.packages("gridExtra")
-## install.packages("coblat")
+## install.packages("colorspace")
 library(Hmisc) 
 library(tidyverse)
 library(Zelig)
@@ -22,11 +20,8 @@ library(writexl)
 library(nnet) 
 library(MatchIt) 
 library(cobalt) 
-library(sensitivityfull) 
-library(sensitivitymw)
-library(causaldrf)
-library(gridExtra)
-library(cobalt)
+library(colorspace)
+
 ##cor, emp merge
 work<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_Head_7th.txt", header=T, fill=T, sep="\t") %>% 
   select(C7C02_01_08, ##direct fee
@@ -43,10 +38,9 @@ work<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_Head_7th.
 
 sell<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_KIS.txt", header=T, fill=T, sep="\t") %>% 
   filter(YYYY==2017) %>% 
-  select(ID1, K_121000) %>% ##K_195010(wage)
+  select(ID1, K_121000) %>% 
   rename("C7_ID1"="ID1")
 sell$K_121000<-log(sell$K_121000)
-
 ##Cleaning
 
 ## avg of succ
@@ -54,6 +48,7 @@ work$succ<-(work$C7C02_03_01+work$C7C02_03_02)/2
 
 ##control, sort
 work$C7_IND1<-ifelse(work$C7_IND1==1,1,0)
+work$C7B01_07<-2-work$C7B01_07
 work$C7D01_05<-2-work$C7D01_05
 work$C7D01_07<-2-work$C7D01_07
 ##years of company
@@ -111,6 +106,7 @@ work$X2_2<-ifelse(work$C7C01_07_05==2,0,ifelse(work$C7C01_07_06/work$C7B02_01_01
 work$X2_3<-ifelse(work$C7C01_07_09==2,0,ifelse(work$C7C01_07_10/work$C7B02_01_01<0.25,1,ifelse(work$C7C01_07_10/work$C7B02_01_01<0.50,2,ifelse(work$C7C01_07_10/work$C7B02_01_01<0.75,3,4))))
 work$X2_4<-ifelse(work$C7C01_07_13==2,0,ifelse(work$C7C01_07_14/work$C7B02_01_01<0.25,1,ifelse(work$C7C01_07_14/work$C7B02_01_01<0.50,2,ifelse(work$C7C01_07_14/work$C7B02_01_01<0.75,3,4))))
 work$X2_5<-ifelse(work$C7C01_07_17==2,0,ifelse(work$C7C01_07_18/work$C7B02_01_01<0.25,1,ifelse(work$C7C01_07_18/work$C7B02_01_01<0.50,2,ifelse(work$C7C01_07_18/work$C7B02_01_01<0.75,3,4))))
+
 work$X2_6<-ifelse(work$C7C01_07_21==2,0,ifelse(work$C7C01_07_22/work$C7B02_01_01<0.25,1,ifelse(work$C7C01_07_22/work$C7B02_01_01<0.50,2,ifelse(work$C7C01_07_22/work$C7B02_01_01<0.75,3,4))))
 work$X2_7<-ifelse(work$C7C01_09_01==2,0,work$C7C01_09_02)
 work$X2<-(work$X2_1+work$X2_2+work$X2_3+work$X2_4+work$X2_5+work$X2_6+work$X2_7)/28
@@ -134,16 +130,16 @@ work$X5_3<-ifelse(work$C7C01_09_05==2,0,work$C7C01_09_06)
 work$X5_4<-ifelse(work$C7C01_09_07==2,0,work$C7C01_09_08)
 work$X5<-(work$X5_1+work$X5_2+work$X5_3+work$X5_4)/16
 ##INFRA
-work$X6_1<-ifelse(work$C7C01_01==1,2,ifelse(work$C7C01_01_02==1,1,0))
+work$X6_1<-ifelse(work$C7C01_01==1,2,ifelse(work$C7C01_01_01==1,1,0))
 work$X6_2<-ifelse(work$C7C01_02==1,1,0)
 work$X6_3<-ifelse(work$C7C01_03==1,1,0)
 work$X6<-(work$X6_1+work$X6_2+work$X6_3)/4
 ##ENVIR
-work$X7_1<-6-work$C7C02_04_01
-work$X7_2<-6-work$C7C02_04_02
-work$X7_3<-6-work$C7C02_04_04
-work$X7_4<-6-work$C7C02_04_06
-work$X7_5<-6-work$C7C02_04_07
+work$X7_1<-5-work$C7C02_04_01
+work$X7_2<-5-work$C7C02_04_02
+work$X7_3<-5-work$C7C02_04_04
+work$X7_4<-5-work$C7C02_04_06
+work$X7_5<-5-work$C7C02_04_07
 work$X7<-(work$X7_1+work$X7_2+work$X7_3+work$X7_4+work$X7_5)/20
 ##HRM
 work$X8_1<-ifelse(work$C7D05_01==1,1,0)
@@ -172,36 +168,58 @@ index<-select(work,C7_ID1,succ,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B0
 index<-merge(index, sell, by="C7_ID1")
 index$treat<-3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
 index<-na.omit(index)
-
 ## gps
-lmGPS=lm(treat~C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
+limo<-(lm(succ~treat,data=index))
+plot(limo)
+lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
 summary(lmGPS)
+plot(lmGPS)
+
+index %>% 
+  ggplot(aes(x=C7_ID1)) +
+  geom_point(aes(y=treat),color="blue")+
+  geom_point(aes(y=lmGPS$fitted,color="red"))
+
+index %>% 
+  ggplot()+
+  geom_point(aes(x=treat,y=lmGPS$fitted)) +
+  geom_abline(slope=1, intercept=0)
 
 index$gps=dnorm(index$treat,
                 mean=lmGPS$fitted,
-                sd=sd(index$treat))
+                sd=summary(lmGPS)$sigma)
+
 index$numerator=dnorm(index$treat,
                       mean=mean(index$treat),
                       sd=sd(index$treat))
 
 index$IPW=index$numerator/index$gps
+
+shapiro.test(lmGPS$fitted)
+
+hist(index$succ)
+hist(index$treat)
+
 hist(index$gps)
 hist(pnorm(index$gps))
+hist(lmGPS$fitted)
 hist(index$numerator)
-hist(index$numerator2)
+hist(pnorm(index$numerator))
 hist(index$IPW)
+ggplot(data=index,aes(x=IPW))+geom_histogram()
 ###### read
 ###### index
+
 write_xlsx(index,path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 index<-read_excel(path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
+index_hi<-select(index,succ,treat,C7_IND1,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000)
 
 ##hist
 hist(index$succ)
-hist(index$treat)
 hist(index$C7_IND1)
 hist(index$emplnum)
-hist(index$percent)  ##log...?
-hist(log(index$C7A01_01)) 
+hist(log(index$percent))  ###log
+hist(index$C7A01_01)
 hist(index$C7D07_02)  ####no
 hist(index$HE)
 hist(index$C7B01_07)
@@ -210,16 +228,13 @@ hist(index$C7D01_07)
 hist(index$K_121000)
 hist(index$gps)
 plot(index$treat,index$succ)
-
-## 3d plot
-plot3
-
 ##
 stddata=index %>% 
   mutate_at(
-    vars(C7_IND1,percent,C7A01_01,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000,treat), ##############
+    vars(C7_IND1,percent,C7A01_01,C7D07_02,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000,treat), ##############
     function(x){(x-mean(x))/sd(x)}
   )
+
 
 ##standarized beta
 lm(C7_IND1~treat,stddata)$coef %>% round(4) ##low
@@ -241,13 +256,13 @@ lm(C7D07_02~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(HE~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7B01_07~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4) ##high
-lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4) ##high
+lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4)
 
-summary(lm(succ~treat+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index))  ##########################
+summary(lm(succ~treat+C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index))  ##########################
 #IPW
-set.seed(12)
-z_out_ipw=zelig(succ~treat+C7_IND1+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
+set.seed(13)
+z_out_ipw=zelig(succ~treat+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
                 data=index,
                 model="ls",
                 weights="IPW",
@@ -276,7 +291,7 @@ IPW_estimate=Table_Sim10000 %>%
 IPW_estimate
 
 ##Simple OLS
-z_out_ols=zelig(succ~treat+C7_IND1+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
+z_out_ols=zelig(succ~treat+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
                 data=index,
                 model="ls",
                 cite=FALSE)
@@ -317,54 +332,87 @@ bind_rows(OLS_estimate %>%  mutate(model="OLS"),
   theme(legend.position = "top")
 ## write_xlsx(treat,path="C:\\Users\\HOON\\Desktop\\HCCP\\merge.xlsx")
 
-####Hirano-Imbens
-index_no_gps<-subset(index,select=-gps)
-hi_estimate <- hi_est(succ,
-                      treat,
-                      treat_formula = treat ~ C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,
-                      outcome_formula = succ~treat+I(treat^2)+gps+I(gps^2)+treat * gps,
-                      #succ~treat+I(treat^2)+gps+I(gps^2)+treat * gps,
-                      #succ~treat+gps+treat*gps,
-                      data = index_hi,
-                      grid_val = seq(0,8, by = 1),
-                      treat_mod = "Normal")
-summary(hi_estimate)
-hi_estimate[[1]]
-plot(hi_estimate[[1]])
-summary(lm(succ~treat+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, data=index))
+### ggplot
+ind1<-ggplot(aes(x=treat,y=succ,color=C7_IND1),data=index)+  
+  geom_point() +
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Industry") +
+  theme_bw()+
+  theme(legend.position = "top")
 
-##### using_causaldrf
-reg_estimate <- reg_est(Y = succ,
-                        treat = treat,
-                        covar_formula = ~ C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,
-                        covar_lin_formula = ~ 1,
-                        covar_sq_formula = ~ 1,
-                        data = index,
-                        degree = 2,
-                        wt = index$IPW,
-                        method = "different")
+empl<-ggplot(aes(x=treat,y=succ,color=emplnum),data=index)+  
+  geom_point()+
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="# of Employee") +
+  theme_bw()+
+  theme(legend.position = "top")
 
-reg_estimate
+taln<-ggplot(aes(x=treat,y=succ,color=C7B01_07),data=index)+  
+  geom_point()+
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Concept of Key Talent") +
+  theme_bw()+
+  theme(legend.position = "top")
 
+plan<-ggplot(aes(x=treat,y=succ,color=C7D01_05),data=index)+  
+  geom_point()+
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Presence of HR Plan") +
+  theme_bw()+
+  theme(legend.position = "top")
 
-library(BayesTree)
+dacum<-ggplot(aes(x=treat,y=succ,color=C7D01_07),data=index)+  
+  geom_point() +
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Presence of Job Analysis") +
+  theme_bw()+
+  theme(legend.position = "top")
 
-bart_estimate <- bart_est(Y = succ,
-                          treat = treat,
-                          outcome_formula = succ ~ treat+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,
-                          data = index,
-                          grid_val = seq(0,8, by = 1))
+sale<-ggplot(aes(x=treat,y=succ,color=K_121000),data=index)+  
+  geom_point() +
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Sale Scale") +
+  theme_bw()+
+  theme(legend.position = "top")
 
-iw_estimate <- iw_est(Y = succ,
-                      treat = treat,
-                      treat_formula = treat ~ C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,
-                      data = index,
-                      grid_val = seq(0,8, by = 1),
-                      bandw = 2 * bw.SJ(index$treat),
-                      treat_mod = "Normal")
-summary(iw_estimate)
-library(ggplot2)
-plot(iw_estimate[[2]])
-ggplot(data=index, aes(x=treat, y=iw_estimate))
-summary(iw_estimate)
-summary(bart_estimate)
+high<-ggplot(aes(x=treat,y=succ,color=HE),data=index)+  
+  geom_point() +
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Proportion of High Education") +
+  theme_bw()+
+  theme(legend.position = "top")
+
+age<-ggplot(aes(x=treat,y=succ,color=C7A01_01),data=index)+  
+  geom_point() +
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Proportion of High Education") +
+  theme_bw()+
+  theme(legend.position = "top")
+
+gridExtra::grid.arrange(ind1,empl,taln,plan, ncol=2)
+gridExtra::grid.arrange(dacum,sale,high, ncol=2)
+
