@@ -6,8 +6,8 @@
 ## install.packages("sensitivitymw")
 ## install.packages("sensitivityfull")
 ## devtools::install_github("vdorie/treatSens")
-##devtools::install_github('IQSS/Zelig')
-install.packages("BayesTree")
+## devtools::install_github('IQSS/Zelig')
+## install.packages("BayesTree")
 ##library(Zelig)
 library(Hmisc) 
 library(tidyverse)
@@ -36,11 +36,10 @@ work<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_Head_7th.
          C7D05_01,C7D05_02,C7D05_03,C7D05_04, ##HRM
          C7_ID1,C7_IND1,C7B02_01_04,C7B02_01_01,C7A01_01,C7D07_02,C7B02_03_04,C7B02_03_05,C7B02_03_06,C7B01_07,C7D01_05,C7D01_07,   ##CONTROL
          C7C02_03_01,C7C02_03_02,C7C02_03_03,C7C02_03_04,C7C02_03_05) ##succ
-summary(sell$K_195050)
 
 sell<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_KIS.txt", header=T, fill=T, sep="\t") %>% 
   filter(YYYY==2017) %>% 
-  select(ID1, K_121000, K_195010) %>% ##K_195010(wage)
+  select(ID1, K_121000) %>% ##K_195010(wage)
   rename("C7_ID1"="ID1")
 sell$K_121000<-log(sell$K_121000)
 ##sell$K_195050<-log(sell$K_195050)
@@ -174,7 +173,7 @@ index$treat<-index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+inde
 index<-na.omit(index)
 
 ## gps
-lmGPS=lm(treat~C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+K_195050, index)  ##########################
+lmGPS=lm(treat~C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
 summary(lmGPS)
 
 index$gps=dnorm(index$treat,
@@ -242,7 +241,7 @@ lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4)
 summary(lm(succ~treat+C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index))  ##########################
 #IPW
 set.seed(12)
-z_out_ipw=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+K_195050, ######## 
+z_out_ipw=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
                 data=index,
                 model="ls",
                 weights="IPW",
@@ -271,7 +270,7 @@ IPW_estimate=Table_Sim10000 %>%
 IPW_estimate
 
 ##Simple OLS
-z_out_ols=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+K_195050,  ############## 
+z_out_ols=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
                 data=index,
                 model="ls",
                 cite=FALSE)
