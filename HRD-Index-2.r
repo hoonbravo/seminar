@@ -8,7 +8,10 @@
 ## devtools::install_github("vdorie/treatSens")
 ## devtools::install_github('IQSS/Zelig')
 ## install.packages("BayesTree")
+## install.packages("rgl")
 ##library(Zelig)
+##install.packages("gridExtra")
+## install.packages("coblat")
 library(Hmisc) 
 library(tidyverse)
 library(Zelig)
@@ -22,7 +25,8 @@ library(cobalt)
 library(sensitivityfull) 
 library(sensitivitymw)
 library(causaldrf)
-
+library(gridExtra)
+library(cobalt)
 ##cor, emp merge
 work<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_Head_7th.txt", header=T, fill=T, sep="\t") %>% 
   select(C7C02_01_08, ##direct fee
@@ -42,7 +46,7 @@ sell<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_KIS.txt",
   select(ID1, K_121000) %>% ##K_195010(wage)
   rename("C7_ID1"="ID1")
 sell$K_121000<-log(sell$K_121000)
-##sell$K_195050<-log(sell$K_195050)
+
 ##Cleaning
 
 ## avg of succ
@@ -107,7 +111,6 @@ work$X2_2<-ifelse(work$C7C01_07_05==2,0,ifelse(work$C7C01_07_06/work$C7B02_01_01
 work$X2_3<-ifelse(work$C7C01_07_09==2,0,ifelse(work$C7C01_07_10/work$C7B02_01_01<0.25,1,ifelse(work$C7C01_07_10/work$C7B02_01_01<0.50,2,ifelse(work$C7C01_07_10/work$C7B02_01_01<0.75,3,4))))
 work$X2_4<-ifelse(work$C7C01_07_13==2,0,ifelse(work$C7C01_07_14/work$C7B02_01_01<0.25,1,ifelse(work$C7C01_07_14/work$C7B02_01_01<0.50,2,ifelse(work$C7C01_07_14/work$C7B02_01_01<0.75,3,4))))
 work$X2_5<-ifelse(work$C7C01_07_17==2,0,ifelse(work$C7C01_07_18/work$C7B02_01_01<0.25,1,ifelse(work$C7C01_07_18/work$C7B02_01_01<0.50,2,ifelse(work$C7C01_07_18/work$C7B02_01_01<0.75,3,4))))
-
 work$X2_6<-ifelse(work$C7C01_07_21==2,0,ifelse(work$C7C01_07_22/work$C7B02_01_01<0.25,1,ifelse(work$C7C01_07_22/work$C7B02_01_01<0.50,2,ifelse(work$C7C01_07_22/work$C7B02_01_01<0.75,3,4))))
 work$X2_7<-ifelse(work$C7C01_09_01==2,0,work$C7C01_09_02)
 work$X2<-(work$X2_1+work$X2_2+work$X2_3+work$X2_4+work$X2_5+work$X2_6+work$X2_7)/28
@@ -131,16 +134,14 @@ work$X5_3<-ifelse(work$C7C01_09_05==2,0,work$C7C01_09_06)
 work$X5_4<-ifelse(work$C7C01_09_07==2,0,work$C7C01_09_08)
 work$X5<-(work$X5_1+work$X5_2+work$X5_3+work$X5_4)/16
 ##INFRA
-work$X6_1<-ifelse(work$C7C01_02==1,2,ifelse(work$C7C01_01_01==1,1,0))
+work$X6_1<-ifelse(work$C7C01_01==1,2,ifelse(work$C7C01_01_02==1,1,0))
 work$X6_2<-ifelse(work$C7C01_02==1,1,0)
 work$X6_3<-ifelse(work$C7C01_03==1,1,0)
 work$X6<-(work$X6_1+work$X6_2+work$X6_3)/4
 ##ENVIR
 work$X7_1<-6-work$C7C02_04_01
-
 work$X7_2<-6-work$C7C02_04_02
 work$X7_3<-6-work$C7C02_04_04
-
 work$X7_4<-6-work$C7C02_04_06
 work$X7_5<-6-work$C7C02_04_07
 work$X7<-(work$X7_1+work$X7_2+work$X7_3+work$X7_4+work$X7_5)/20
@@ -169,7 +170,7 @@ work$X8<-(work$X8_1+work$X8_2+work$X8_3+work$X8_4)/4
 ##new data
 index<-select(work,C7_ID1,succ,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,X1,X2,X3,X4,X5,X6,X7,X8) ######################
 index<-merge(index, sell, by="C7_ID1")
-index$treat<-index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
+index$treat<-3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
 index<-na.omit(index)
 
 ## gps
@@ -178,28 +179,29 @@ summary(lmGPS)
 
 index$gps=dnorm(index$treat,
                 mean=lmGPS$fitted,
-                sd=summary(lmGPS)$sigma)
+                sd=sd(index$treat))
 index$numerator=dnorm(index$treat,
                       mean=mean(index$treat),
                       sd=sd(index$treat))
 
 index$IPW=index$numerator/index$gps
 hist(index$gps)
+hist(pnorm(index$gps))
 hist(index$numerator)
+hist(index$numerator2)
 hist(index$IPW)
 ###### read
 ###### index
-
 write_xlsx(index,path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 index<-read_excel(path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
-index_hi<-select(index,succ,treat,C7_IND1,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000)
 
 ##hist
 hist(index$succ)
+hist(index$treat)
 hist(index$C7_IND1)
 hist(index$emplnum)
-hist(log(index$percent))  ###log
-hist(index$C7A01_01)
+hist(index$percent)  ##log...?
+hist(log(index$C7A01_01)) 
 hist(index$C7D07_02)  ####no
 hist(index$HE)
 hist(index$C7B01_07)
@@ -208,6 +210,10 @@ hist(index$C7D01_07)
 hist(index$K_121000)
 hist(index$gps)
 plot(index$treat,index$succ)
+
+## 3d plot
+plot3
+
 ##
 stddata=index %>% 
   mutate_at(
@@ -235,13 +241,13 @@ lm(C7D07_02~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(HE~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7B01_07~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4) ##high
+lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4) ##high
 
-summary(lm(succ~treat+C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index))  ##########################
+summary(lm(succ~treat+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index))  ##########################
 #IPW
 set.seed(12)
-z_out_ipw=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
+z_out_ipw=zelig(succ~treat+C7_IND1+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
                 data=index,
                 model="ls",
                 weights="IPW",
@@ -270,7 +276,7 @@ IPW_estimate=Table_Sim10000 %>%
 IPW_estimate
 
 ##Simple OLS
-z_out_ols=zelig(succ~treat+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
+z_out_ols=zelig(succ~treat+C7_IND1+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
                 data=index,
                 model="ls",
                 cite=FALSE)
