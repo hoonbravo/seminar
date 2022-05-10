@@ -212,7 +212,6 @@ ggplot(data=index,aes(x=IPW))+geom_histogram()
 
 write_xlsx(index,path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 index<-read_excel(path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
-index_hi<-select(index,succ,treat,C7_IND1,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000)
 
 ##hist
 hist(index$succ)
@@ -259,10 +258,11 @@ lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4)
 
-summary(lm(succ~treat+C7_IND1+C7_IND1+HE+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index))  ##########################
+summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, index)) ##########################
+summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index)) ##########################
 #IPW
-set.seed(13)
-z_out_ipw=zelig(succ~treat+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
+set.seed(14)
+z_out_ipw=zelig(succ~treat+C7_IND1+emplnum+percent+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
                 data=index,
                 model="ls",
                 weights="IPW",
@@ -291,7 +291,7 @@ IPW_estimate=Table_Sim10000 %>%
 IPW_estimate
 
 ##Simple OLS
-z_out_ols=zelig(succ~treat+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
+z_out_ols=zelig(succ~treat+C7_IND1+emplnum+percent+HE+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
                 data=index,
                 model="ls",
                 cite=FALSE)
