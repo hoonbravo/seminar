@@ -168,9 +168,8 @@ index<-select(work,C7_ID1,succ,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B0
 index<-merge(index, sell, by="C7_ID1")
 index$treat<-3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
 index<-na.omit(index)
+
 ## gps
-limo<-(lm(succ~treat,data=index))
-plot(limo)
 lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
 summary(lmGPS)
 plot(lmGPS)
@@ -254,9 +253,9 @@ lm(C7A01_01~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7D07_02~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(HE~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7B01_07~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4) ##high
 lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4) ##high
 
 summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, index)) ##########################
 summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index)) ##########################
