@@ -10,6 +10,8 @@
 ## install.packages("BayesTree")
 ##library(Zelig)
 ## install.packages("colorspace")
+## install.packages("psych")
+## install.packages("corrplot")
 library(Hmisc) 
 library(tidyverse)
 library(Zelig)
@@ -21,6 +23,8 @@ library(nnet)
 library(MatchIt) 
 library(cobalt) 
 library(colorspace)
+library(psych)
+library(corrplot)
 
 ##cor, emp merge
 work<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_Head_7th.txt", header=T, fill=T, sep="\t") %>% 
@@ -164,11 +168,22 @@ work$X8<-(work$X8_1+work$X8_2+work$X8_3+work$X8_4)/4
 ## hist(index$treat)
 
 ##new data
-index<-select(work,C7_ID1,succ,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,X1,X2,X3,X4,X5,X6,X7,X8) ######################
+index<-select(work,C7_ID1,succ,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,X1_1:X8) ######################
 index<-merge(index, sell, by="C7_ID1")
 index$treat<-3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
 index<-na.omit(index)
 
+##cronbach alpha
+alpha(index[,15:21])
+alpha(index[,23:26])
+alpha(index[,28:32])
+alpha(index[,34:37])
+alpha(index[,39:41])
+alpha(index[,43:47])
+alpha(index[,49:52])
+
+##reliability
+cor(index[,c("succ","X1","X2","X3","X4","X5","X6","X7","X8")])
 ## gps
 lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
 summary(lmGPS)
