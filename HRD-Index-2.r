@@ -19,12 +19,12 @@ library(readxl)
 library(dplyr)
 library(writexl)
 ##important? packages
-library(nnet) 
-library(MatchIt) 
-library(cobalt) 
+## library(nnet) 
+## library(MatchIt) 
+## library(cobalt) 
 library(colorspace)
 library(psych)
-library(corrplot)
+## library(corrplot)
 
 ##cor, emp merge
 work<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_Head_7th.txt", header=T, fill=T, sep="\t") %>% 
@@ -44,7 +44,7 @@ sell<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_KIS.txt",
   filter(YYYY==2017) %>% 
   select(ID1, K_121000) %>% 
   rename("C7_ID1"="ID1")
-sell$K_121000<-log(sell$K_121000)
+sell$K_121<-log(sell$K_121000)
 ##Cleaning
 
 ## avg of succ
@@ -53,10 +53,11 @@ work$succ<-(work$C7C02_03_01+work$C7C02_03_02)/2
 ##control, sort
 work$C7_IND1<-ifelse(work$C7_IND1==1,1,0)
 work$C7B01_07<-2-work$C7B01_07
+work$C7B01_07<-2-work$C7B01_07
 work$C7D01_05<-2-work$C7D01_05
 work$C7D01_07<-2-work$C7D01_07
 ##years of company
-work$C7A01_01<-log(2017-work$C7A01_01)
+work$C7A01_01<-(2017-work$C7A01_01)
 
 ## # of employee
 work<-work[(!work$C7B02_03_04==-9),]
@@ -168,13 +169,15 @@ work$X8<-(work$X8_1+work$X8_2+work$X8_3+work$X8_4)/4
 ## hist(index$treat)
 
 ##new data
-index<-select(work,C7_ID1,succ,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,X1_1:X8) ######################
+index<-select(work,C7_ID1,succ,C7C02_03_01,C7C02_03_02,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,X1_1:X8) ######################
 index<-merge(index, sell, by="C7_ID1")
 index$treat<-3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
 index<-na.omit(index)
 
 ## gps
-lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
+lmGPS=lm(treat~K_121+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7_IND1, index)  ##########################
+## lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121+C7_IND1+percent+C7A01_01+C7D07_02+HE, index)  ##########################
+
 summary(lmGPS)
 
 index$gps=dnorm(index$treat,
@@ -188,41 +191,16 @@ index$numerator=dnorm(index$treat,
 index$IPW=index$numerator/index$gps
 
 shapiro.test(lmGPS$fitted)
-
-hist(index$succ)
-hist(index$treat)
-
-hist(index$gps)
-hist(pnorm(index$gps))
-hist(lmGPS$fitted)
-hist(index$numerator)
-hist(pnorm(index$numerator))
-hist(index$IPW)
-ggplot(data=index,aes(x=IPW))+geom_histogram()
 ###### read
 ###### index
 
 write_xlsx(index,path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 index<-read_excel(path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 
-##hist
-hist(index$succ)
-hist(index$C7_IND1)
-hist(index$emplnum)
-hist(log(index$percent))  ###log
-hist(index$C7A01_01)
-hist(index$C7D07_02)  ####no
-hist(index$HE)
-hist(index$C7B01_07)
-hist(index$C7D01_05)
-hist(index$C7D01_07)
-hist(index$K_121000)
-hist(index$gps)
-plot(index$treat,index$succ)
-##
+##standarization
 stddata=index %>% 
   mutate_at(
-    vars(C7_IND1,percent,C7A01_01,C7D07_02,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000,treat), ##############
+    vars(C7_IND1,percent,C7A01_01,C7D07_02,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121,treat), ##############
     function(x){(x-mean(x))/sd(x)}
   )
 
@@ -237,7 +215,7 @@ lm(HE~treat,stddata)$coef %>% round(4) ##low
 lm(C7B01_07~treat,stddata)$coef %>% round(4)
 lm(C7D01_05~treat,stddata)$coef %>% round(4)
 lm(C7D01_07~treat,stddata)$coef %>% round(4)
-lm(K_121000~treat,stddata)$coef %>% round(4)
+lm(K_121~treat,stddata)$coef %>% round(4)
 
 lm(C7_IND1~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(emplnum~treat,stddata, weights=IPW)$coef %>% round(4)
@@ -248,13 +226,13 @@ lm(HE~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7B01_07~treat,stddata, weights=IPW)$coef %>% round(4)
 lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4) ##high
 lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(K_121000~treat,stddata, weights=IPW)$coef %>% round(4) ##high
+lm(K_121~treat,stddata, weights=IPW)$coef %>% round(4) ##high
 
-summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, index)) ##########################
-summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index)) ##########################
+summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121, index)) ##########################
+summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121,weights=IPW, index)) ##########################
 #IPW
 set.seed(14)
-z_out_ipw=zelig(succ~treat+C7_IND1+emplnum+percent+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, ######## 
+z_out_ipw=zelig(succ~treat+K_121+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7_IND1, ######## 
                 data=index,
                 model="ls",
                 weights="IPW",
@@ -283,7 +261,7 @@ IPW_estimate=Table_Sim10000 %>%
 IPW_estimate
 
 ##Simple OLS
-z_out_ols=zelig(succ~treat+C7_IND1+emplnum+percent+HE+C7B01_07+C7D01_05+C7D01_07+K_121000,  ############## 
+z_out_ols=zelig(succ~treat+K_121+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7_IND1,  ############## 
                 data=index,
                 model="ls",
                 cite=FALSE)

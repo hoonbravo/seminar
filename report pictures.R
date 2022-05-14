@@ -1,3 +1,56 @@
+##descriptive statistics
+######
+summary(index$succ)
+summary(index$treat)
+summary(index$C7C02_03_01)
+sd(index$C7C02_03_01)
+summary(index$C7C02_03_02)
+sd(index$C7C02_03_01)
+
+summary(index$treat)
+sd(index$treat)
+
+summary(index$C7_IND1)
+summary(index$C7B02_03_04)
+sd(index$C7B02_03_04)
+summary(index$HE)
+sd(index$HE)
+hist(index$HE)
+summary(index$C7B01_07)
+summary(index$C7D01_05)
+summary(index$C7D01_07)
+summary(0.001*index$K_121000)
+sd(index$K_121000)
+summary(index$percent)
+sd(index$percent)
+summary(2017-index$C7A01_01)
+sd(2017-index$C7A01_01)
+summary(index$C7D07_02)
+sd(index$C7D07_02)
+
+
+summary(index$gps)
+summary(pnorm(index$gps))
+summary(lmGPS$fitted)
+summary(index$numerator)
+summary(pnorm(index$numerator))
+summary(index$IPW)
+
+##hist
+hist(index$succ)
+hist(index$C7_IND1) ##binary
+hist(index$emplnum)
+hist(log(index$percent))  
+hist(index$C7A01_01)
+hist(index$C7D07_02)  ####no
+hist(index$HE)
+hist(index$C7B01_07)
+hist(index$C7D01_05)
+hist(index$C7D01_07)
+hist(index$K_121)
+hist(index$gps)
+plot(index$treat,index$succ)
+
 ##GPS
 #######
 index %>% 
@@ -24,16 +77,21 @@ hist(index$IPW)
 ggplot(data=index,aes(x=IPW))+geom_histogram()
 
 ##cronbach alpha
-alpha(index[,15:21])
-alpha(index[,23:26])
-alpha(index[,28:32])
-alpha(index[,34:37])
-alpha(index[,39:41])
-alpha(index[,43:47])
-alpha(index[,49:52])
+alpha(index[,3:4])
+alpha(index[,17:23]) ##X2
+alpha(index[,25:28]) ##X3
+alpha(index[,20:34]) ##X4
+alpha(index[,36:39]) ##X5
+alpha(index[,41:43]) ##X6
+alpha(index[,45:49]) ##X7
+alpha(index[,51:54]) ##X8
 
 ##reliability
-cor(index[,c("succ","X1","X2","X3","X4","X5","X6","X7","X8")])
+cor<-as.data.frame(cor(index[,c("succ","X1","X2","X3","X4","X5","X6","X7","X8")]))
+write_xlsx(cor,path="C:\\Users\\HOON\\Desktop\\seminar\\cor.xlsx")
+
+cor_treat<-as.data.frame(cor(index[,c("treat","C7_IND1","emplnum","C7B01_07","C7D01_05","C7D01_07","K_121000")]))
+write_xlsx(cor_treat,path="C:\\Users\\HOON\\Desktop\\seminar\\cor_treat.xlsx")
 
 ### ggplot
 #######
