@@ -173,31 +173,9 @@ index<-merge(index, sell, by="C7_ID1")
 index$treat<-3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
 index<-na.omit(index)
 
-##cronbach alpha
-alpha(index[,15:21])
-alpha(index[,23:26])
-alpha(index[,28:32])
-alpha(index[,34:37])
-alpha(index[,39:41])
-alpha(index[,43:47])
-alpha(index[,49:52])
-
-##reliability
-cor(index[,c("succ","X1","X2","X3","X4","X5","X6","X7","X8")])
 ## gps
 lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121000, index)  ##########################
 summary(lmGPS)
-plot(lmGPS)
-
-index %>% 
-  ggplot(aes(x=C7_ID1)) +
-  geom_point(aes(y=treat),color="blue")+
-  geom_point(aes(y=lmGPS$fitted,color="red"))
-
-index %>% 
-  ggplot()+
-  geom_point(aes(x=treat,y=lmGPS$fitted)) +
-  geom_abline(slope=1, intercept=0)
 
 index$gps=dnorm(index$treat,
                 mean=lmGPS$fitted,
@@ -286,7 +264,7 @@ Table_Sim10000=data.frame()
 range_treat=quantile(index$treat,prob=0.1*(1:9))
 for(i in 1:length(range_treat)){
   X=setx(z_out_ipw,treat=range_treat[i],data=index) 
-  S=sim(z_out_ipw,X,num=10000)
+  S=Zelig::sim(z_out_ipw,X,num=10000)
   EV=data.frame(t(get_qi(S,"ev")))
   Table_Sim10000=rbind(Table_Sim10000,EV)
 }
@@ -313,7 +291,7 @@ z_out_ols=zelig(succ~treat+C7_IND1+emplnum+percent+HE+C7B01_07+C7D01_05+C7D01_07
 Table_Sim10000=data.frame()
 for(i in 1:length(range_treat)){
   X=setx(z_out_ols,treat=range_treat[i],data=index) ##mydata?
-  S=sim(z_out_ols,X,num=10000)
+  S=Zelig::sim(z_out_ols,X,num=10000)
   EV=data.frame(t(get_qi(S,"ev")))
   Table_Sim10000=rbind(Table_Sim10000,EV)
 }
@@ -345,88 +323,3 @@ bind_rows(OLS_estimate %>%  mutate(model="OLS"),
   theme_bw()+
   theme(legend.position = "top")
 ## write_xlsx(treat,path="C:\\Users\\HOON\\Desktop\\HCCP\\merge.xlsx")
-
-### ggplot
-ind1<-ggplot(aes(x=treat,y=succ,color=C7_IND1),data=index)+  
-  geom_point() +
-  scale_color_continuous_sequential(palette = 'Heat',
-                                    begin = .2) +
-  labs(x="X, Treat",
-       y="Y, Job Performance",
-       col="Industry") +
-  theme_bw()+
-  theme(legend.position = "top")
-
-empl<-ggplot(aes(x=treat,y=succ,color=emplnum),data=index)+  
-  geom_point()+
-  scale_color_continuous_sequential(palette = 'Heat',
-                                    begin = .2) +
-  labs(x="X, Treat",
-       y="Y, Job Performance",
-       col="# of Employee") +
-  theme_bw()+
-  theme(legend.position = "top")
-
-taln<-ggplot(aes(x=treat,y=succ,color=C7B01_07),data=index)+  
-  geom_point()+
-  scale_color_continuous_sequential(palette = 'Heat',
-                                    begin = .2) +
-  labs(x="X, Treat",
-       y="Y, Job Performance",
-       col="Concept of Key Talent") +
-  theme_bw()+
-  theme(legend.position = "top")
-
-plan<-ggplot(aes(x=treat,y=succ,color=C7D01_05),data=index)+  
-  geom_point()+
-  scale_color_continuous_sequential(palette = 'Heat',
-                                    begin = .2) +
-  labs(x="X, Treat",
-       y="Y, Job Performance",
-       col="Presence of HR Plan") +
-  theme_bw()+
-  theme(legend.position = "top")
-
-dacum<-ggplot(aes(x=treat,y=succ,color=C7D01_07),data=index)+  
-  geom_point() +
-  scale_color_continuous_sequential(palette = 'Heat',
-                                    begin = .2) +
-  labs(x="X, Treat",
-       y="Y, Job Performance",
-       col="Presence of Job Analysis") +
-  theme_bw()+
-  theme(legend.position = "top")
-
-sale<-ggplot(aes(x=treat,y=succ,color=K_121000),data=index)+  
-  geom_point() +
-  scale_color_continuous_sequential(palette = 'Heat',
-                                    begin = .2) +
-  labs(x="X, Treat",
-       y="Y, Job Performance",
-       col="Sale Scale") +
-  theme_bw()+
-  theme(legend.position = "top")
-
-high<-ggplot(aes(x=treat,y=succ,color=HE),data=index)+  
-  geom_point() +
-  scale_color_continuous_sequential(palette = 'Heat',
-                                    begin = .2) +
-  labs(x="X, Treat",
-       y="Y, Job Performance",
-       col="Proportion of High Education") +
-  theme_bw()+
-  theme(legend.position = "top")
-
-age<-ggplot(aes(x=treat,y=succ,color=C7A01_01),data=index)+  
-  geom_point() +
-  scale_color_continuous_sequential(palette = 'Heat',
-                                    begin = .2) +
-  labs(x="X, Treat",
-       y="Y, Job Performance",
-       col="Proportion of High Education") +
-  theme_bw()+
-  theme(legend.position = "top")
-
-gridExtra::grid.arrange(ind1,empl,taln,plan, ncol=2)
-gridExtra::grid.arrange(dacum,sale,high, ncol=2)
-
