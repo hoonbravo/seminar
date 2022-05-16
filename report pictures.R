@@ -1,3 +1,5 @@
+summary(work)
+
 ##descriptive statistics
 ######
 summary(index$succ)
@@ -86,6 +88,39 @@ alpha(index[,41:43]) ##X6
 alpha(index[,45:49]) ##X7
 alpha(index[,51:54]) ##X8
 
+##standarization
+stddata=index %>% 
+  mutate_at(
+    vars(C7_IND1,percent,C7A01_01,C7D07_02,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121,treat), ##############
+    function(x){(x-mean(x))/sd(x)}
+  )
+
+##standarized beta
+lm(C7_IND1~treat,stddata)$coef %>% round(4) ##low
+lm(emplnum~treat,stddata)$coef %>% round(4)
+lm(percent~treat,stddata)$coef %>% round(4) ##low
+lm(C7A01_01~treat,stddata)$coef %>% round(4) ##low
+lm(C7D07_02~treat,stddata)$coef %>% round(4) ##low
+lm(HE~treat,stddata)$coef %>% round(4) ##low
+lm(C7B01_07~treat,stddata)$coef %>% round(4)
+lm(C7D01_05~treat,stddata)$coef %>% round(4)
+lm(C7D01_07~treat,stddata)$coef %>% round(4)
+lm(K_121~treat,stddata)$coef %>% round(4)
+
+lm(C7_IND1~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(emplnum~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(percent~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(C7A01_01~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(C7D07_02~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(HE~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(C7B01_07~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4) ##high
+lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
+lm(K_121~treat,stddata, weights=IPW)$coef %>% round(4) ##high
+
+summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, index)) ##########################
+summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index)) ##########################
+
 ##reliability
 cor<-as.data.frame(cor(index[,c("succ","X1","X2","X3","X4","X5","X6","X7","X8")]))
 write_xlsx(cor,path="C:\\Users\\HOON\\Desktop\\seminar\\cor.xlsx")
@@ -95,6 +130,9 @@ write_xlsx(cor_treat,path="C:\\Users\\HOON\\Desktop\\seminar\\cor_treat.xlsx")
 
 ### ggplot
 #######
+ggplot(aes(x=treat,y=succ),data=index)+
+  stat_smooth(method='lm')
+
 ind1<-ggplot(aes(x=treat,y=succ,color=C7_IND1),data=index)+  
   geom_point() +
   scale_color_continuous_sequential(palette = 'Heat',

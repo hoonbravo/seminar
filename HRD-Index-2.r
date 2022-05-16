@@ -37,37 +37,33 @@ work<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_Head_7th.
          C7C01_01,C7C01_01_01,C7C01_02,C7C01_03, ##INFRA
          C7C02_04_01,C7C02_04_02,C7C02_04_04,C7C02_04_06,C7C02_04_07, ##ENVIR
          C7D05_01,C7D05_02,C7D05_03,C7D05_04, ##HRM
-         C7_ID1,C7_IND1,C7B02_01_04,C7B02_01_01,C7A01_01,C7D07_02,C7B02_03_04,C7B02_03_05,C7B02_03_06,C7B01_07,C7D01_05,C7D01_07,   ##CONTROL
+         C7_ID1,C7_IND1,C7B02_01_04,C7B02_01_01,C7A01_01,C7D07_02,C7B02_03_04,
+         C7B02_03_05,C7B02_03_06,C7B01_07,C7D01_05,C7D01_07,   ##CONTROL
          C7C02_03_01,C7C02_03_02,C7C02_03_03,C7C02_03_04,C7C02_03_05) ##succ
 
 sell<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_KIS.txt", header=T, fill=T, sep="\t") %>% 
   filter(YYYY==2017) %>% 
   select(ID1, K_121000) %>% 
   rename("C7_ID1"="ID1")
-sell$K_121<-log(sell$K_121000)
+sell$K_121000<-log(sell$K_121000)
 ##Cleaning
 
 ## avg of succ
-work$succ<-(work$C7C02_03_01+work$C7C02_03_02)/2
+work$succ<-(work$C7C02_03_01+work$C7C02_03_02+work$C7C02_03_05)/3
 
 ##control, sort
 work$C7_IND1<-ifelse(work$C7_IND1==1,1,0)
-work$C7B01_07<-2-work$C7B01_07
-work$C7B01_07<-2-work$C7B01_07
-work$C7D01_05<-2-work$C7D01_05
-work$C7D01_07<-2-work$C7D01_07
-##years of company
-work$C7A01_01<-(2017-work$C7A01_01)
-
+work$C7B01_07<-2-work$C7B01_07 ##key talent
+work$C7D01_05<-2-work$C7D01_05 ##HR Planning
+work$C7D01_07<-2-work$C7D01_07 ##DACUM
+work$C7D07_02<-2-work$C7D07_02 ##NOZO 
+work$C7A01_01<-(2017-work$C7A01_01) ##years of 
+work$HE<-(work$C7B02_03_04+work$C7B02_03_05+work$C7B02_03_06)/work$C7B02_01_01 ##HE
 ## # of employee
 work<-work[(!work$C7B02_03_04==-9),]
 work$percent<-work$C7B02_01_04/work$C7B02_01_01
 work$emplnum<-log(work$C7B02_01_01)
-## % of HE
-work$HE<-(work$C7B02_03_04+work$C7B02_03_05+work$C7B02_03_06)/work$C7B02_01_01
 
-## nozo
-work$C7D07_02<-2-work$C7D07_02
 ##direct fee
 work<-work[(!work$C7C02_01_08==-8),]  ##remove direct fee -8,-9
 work<-work[(!work$C7C02_01_08==-9),] 
@@ -169,13 +165,15 @@ work$X8<-(work$X8_1+work$X8_2+work$X8_3+work$X8_4)/4
 ## hist(index$treat)
 
 ##new data
-index<-select(work,C7_ID1,succ,C7C02_03_01,C7C02_03_02,C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,C7D01_07,X1_1:X8) ######################
+index<-select(work,C7_ID1,succ,C7C02_03_01,C7C02_03_02,
+              C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,
+              C7D01_07,X1_1:X8) ######################
 index<-merge(index, sell, by="C7_ID1")
 index$treat<-3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
 index<-na.omit(index)
 
 ## gps
-lmGPS=lm(treat~K_121+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7_IND1, index)  ##########################
+lmGPS=lm(treat~K_121000+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7_IND1, index)  ##########################
 ## lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121+C7_IND1+percent+C7A01_01+C7D07_02+HE, index)  ##########################
 
 summary(lmGPS)
@@ -190,49 +188,15 @@ index$numerator=dnorm(index$treat,
 
 index$IPW=index$numerator/index$gps
 
-shapiro.test(lmGPS$fitted)
 ###### read
 ###### index
 
 write_xlsx(index,path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 index<-read_excel(path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 
-##standarization
-stddata=index %>% 
-  mutate_at(
-    vars(C7_IND1,percent,C7A01_01,C7D07_02,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121,treat), ##############
-    function(x){(x-mean(x))/sd(x)}
-  )
-
-
-##standarized beta
-lm(C7_IND1~treat,stddata)$coef %>% round(4) ##low
-lm(emplnum~treat,stddata)$coef %>% round(4)
-lm(percent~treat,stddata)$coef %>% round(4) ##low
-lm(C7A01_01~treat,stddata)$coef %>% round(4) ##low
-lm(C7D07_02~treat,stddata)$coef %>% round(4) ##low
-lm(HE~treat,stddata)$coef %>% round(4) ##low
-lm(C7B01_07~treat,stddata)$coef %>% round(4)
-lm(C7D01_05~treat,stddata)$coef %>% round(4)
-lm(C7D01_07~treat,stddata)$coef %>% round(4)
-lm(K_121~treat,stddata)$coef %>% round(4)
-
-lm(C7_IND1~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(emplnum~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(percent~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(C7A01_01~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(C7D07_02~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(HE~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(C7B01_07~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4) ##high
-lm(C7D01_07~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(K_121~treat,stddata, weights=IPW)$coef %>% round(4) ##high
-
-summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121, index)) ##########################
-summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121,weights=IPW, index)) ##########################
 #IPW
 set.seed(14)
-z_out_ipw=zelig(succ~treat+K_121+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7_IND1, ######## 
+z_out_ipw=zelig(succ~treat+K_121000+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7_IND1, ######## 
                 data=index,
                 model="ls",
                 weights="IPW",
@@ -261,7 +225,7 @@ IPW_estimate=Table_Sim10000 %>%
 IPW_estimate
 
 ##Simple OLS
-z_out_ols=zelig(succ~treat+K_121+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7_IND1,  ############## 
+z_out_ols=zelig(succ~treat+K_121000+emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7_IND1,  ############## 
                 data=index,
                 model="ls",
                 cite=FALSE)
@@ -297,7 +261,9 @@ bind_rows(OLS_estimate %>%  mutate(model="OLS"),
        y="Point estimates with their 95%CI\n(Response)",
        fill="Model", shape="Model",color="Model")+
   scale_x_continuous(breaks=round(IPW_estimate$treat,1))+
-  coord_cartesian(ylim=c(1,3))+
-  theme_bw()+
+  coord_cartesian(ylim=c(1,4))+
+  theme_bw()
   theme(legend.position = "top")
 ## write_xlsx(treat,path="C:\\Users\\HOON\\Desktop\\HCCP\\merge.xlsx")
+
+  
