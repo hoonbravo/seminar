@@ -29,7 +29,7 @@ summary(2017-index$C7A01_01)
 sd(2017-index$C7A01_01)
 summary(index$C7D07_02)
 sd(index$C7D07_02)
-
+summary(index$C7D01_05_01)
 
 summary(index$gps)
 summary(pnorm(index$gps))
@@ -49,10 +49,13 @@ hist(index$HE)
 hist(index$C7B01_07)
 hist(index$C7D01_05)
 hist(index$C7D01_07)
-hist(index$K_121)
+hist(index$K_121000)
 hist(index$gps)
 plot(index$treat,index$succ)
 
+ggplot(data=index,aes(x=treat,y=succ)) + 
+  stat_smooth(method='lm')
+lm(succ~treat,data=index)
 ##GPS
 #######
 index %>% 
@@ -91,42 +94,68 @@ alpha(index[,51:54]) ##X8
 ##standarization
 stddata=index %>% 
   mutate_at(
-    vars(C7_IND1,percent,C7A01_01,C7D07_02,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000,treat), ##############
+    vars(C7_IND1,C7A01_01,C7D07_02,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000,C7D01_05_01,treat), ##############
     function(x){(x-mean(x))/sd(x)}
   )
 
 ##standarized beta
-lm(C7_IND1~treat,stddata)$coef %>% round(4) ##low
-lm(emplnum~treat,stddata)$coef %>% round(4)
-lm(percent~treat,stddata)$coef %>% round(4) ##low
-lm(C7A01_01~treat,stddata)$coef %>% round(4) ##low
-lm(C7D07_02~treat,stddata)$coef %>% round(4) ##low
-lm(HE~treat,stddata)$coef %>% round(4) ##low
-lm(C7B01_07~treat,stddata)$coef %>% round(4)
-lm(C7D01_05~treat,stddata)$coef %>% round(4)
-lm(C7D01_07~treat,stddata)$coef %>% round(4)
-lm(K_121~treat,stddata)$coef %>% round(4)
+summary(lm(C7_IND1~treat,stddata)) ##low
+summary(lm(emplnum~treat,stddata)) 
+summary(lm(percent~treat,stddata))  ##low
+summary(lm(C7A01_01~treat,stddata))  ##low
+summary(lm(C7D07_02~treat,stddata))  ##low
+summary(lm(HE~treat,stddata))  
+summary(lm(C7B01_07~treat,stddata)) 
+summary(lm(C7D01_05~treat,stddata)) 
+summary(lm(C7D01_07~treat,stddata)) 
+summary(lm(K_121000~treat,stddata)) 
+summary(lm(C7D01_05_01~treat,stddata))
 
-lm(C7_IND1~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(emplnum~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(percent~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(C7A01_01~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(C7D07_02~treat,stddata, weights=IPW)$coef %>% round(4)
-lm(HE~treat,stddata, weights=IPW)$coef %>% round(4)
-summary(lm(C7B01_07~treat,stddata, weights=IPW))$coef %>% round(4)
-lm(C7D01_05~treat,stddata, weights=IPW)$coef %>% round(4) ##high
-summary(lm(C7D01_07~treat,stddata, weights=IPW))$coef %>% round(4)
-summary(lm(K_121000~treat,stddata, weights=IPW))$coef %>% round(4) ##high
+summary(lm(C7_IND1~treat,stddata, weights=IPW)) ##low
+summary(lm(emplnum~treat,stddata, weights=IPW)) ##high
+summary(lm(percent~treat,stddata, weights=IPW)) ##low
+summary(lm(C7A01_01~treat,stddata, weights=IPW)) ##low
+summary(lm(C7D07_02~treat,stddata, weights=IPW)) ##low
+summary(lm(HE~treat,stddata, weights=IPW))
+summary(lm(C7B01_07~treat,stddata, weights=IPW)) 
+summary(lm(C7D01_05~treat,stddata, weights=IPW))  ##high
+summary(lm(C7D01_07~treat,stddata, weights=IPW)) 
+summary(lm(K_121000~treat,stddata, weights=IPW))
+summary(lm(C7D01_05_01~treat,stddata, weights=IPW)) ##high
 
-summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000, index)) ##########################
-summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000,weights=IPW, index)) ##########################
+summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+C7D01_05_01, index)) ##########################
+summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+C7D01_05_01,weights=IPW, index)) ##########################
 
 ##reliability
-cor<-as.data.frame(cor(index[,c("succ","X1","X2","X3","X4","X5","X6","X7","X8")]))
+cor<-as.data.frame(cor(index[,c("succ","treat","C7_IND1","HE","percent","emplnum","C7B01_07","C7D01_05","C7D01_07","K_121000","C7D01_05_01")]))
 write_xlsx(cor,path="C:\\Users\\HOON\\Desktop\\seminar\\cor.xlsx")
 
 cor_treat<-as.data.frame(cor(index[,c("treat","C7_IND1","emplnum","C7B01_07","C7D01_05","C7D01_07","K_121000")]))
 write_xlsx(cor_treat,path="C:\\Users\\HOON\\Desktop\\seminar\\cor_treat.xlsx")
+
+cor
+cor.test(index$succ,index$treat)
+cor.test(index$succ,index$C7_IND1) ##low
+cor.test(index$succ,index$HE)
+cor.test(index$succ,index$percent) ##low
+cor.test(index$succ,index$C7A01_01) ##low
+cor.test(index$succ,index$emplnum)
+cor.test(index$succ,index$C7B01_07)
+cor.test(index$succ,index$C7D01_05)
+cor.test(index$succ,index$C7D01_05_01)
+cor.test(index$succ,index$C7D01_07)
+cor.test(index$succ,index$K_121000)
+
+cor.test(index$treat,index$C7_IND1) ##low
+cor.test(index$treat,index$HE)
+cor.test(index$treat,index$percent) ##low
+cor.test(index$treat,index$C7A01_01) ##low
+cor.test(index$treat,index$emplnum)
+cor.test(index$treat,index$C7B01_07)
+cor.test(index$treat,index$C7D01_05)
+cor.test(index$treat,index$C7D01_05_01)
+cor.test(index$treat,index$C7D01_07)
+cor.test(index$treat,index$K_121000)
 
 ### ggplot
 #######
@@ -173,6 +202,16 @@ plan<-ggplot(aes(x=treat,y=succ,color=C7D01_05),data=index)+
   theme_bw()+
   theme(legend.position = "top")
 
+connect<-ggplot(aes(x=treat,y=succ,color=C7D01_05_01),data=index)+  
+  geom_point() +
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Linkage of HR Pland with Business Strategy") +
+  theme_bw()+
+  theme(legend.position = "top")
+
 dacum<-ggplot(aes(x=treat,y=succ,color=C7D01_07),data=index)+  
   geom_point() +
   scale_color_continuous_sequential(palette = 'Heat',
@@ -213,8 +252,8 @@ age<-ggplot(aes(x=treat,y=succ,color=C7A01_01),data=index)+
   theme_bw()+
   theme(legend.position = "top")
 
-gridExtra::grid.arrange(ind1,empl,taln,plan, ncol=2)
-gridExtra::grid.arrange(dacum,sale,high, ncol=2)
+gridExtra::grid.arrange(dacum,taln,plan,connect, ncol=2)
+gridExtra::grid.arrange(empl,sale,high, ncol=2)
 
 ### ggplot_fitted
 #######
@@ -258,6 +297,16 @@ plan2<-ggplot(aes(x=lmGPS$fitted,y=succ,color=C7D01_05),data=index)+
   theme_bw()+
   theme(legend.position = "top")
 
+connect2<-ggplot(aes(x=treat,y=succ,color=C7D01_05_01),data=index)+  
+  geom_point() +
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, IPW Changed",
+       y="Y, Job Performance",
+       col="Linkage of HR Pland with Business Strategy") +
+  theme_bw()+
+  theme(legend.position = "top")
+
 dacum2<-ggplot(aes(x=lmGPS$fitted,y=succ,color=C7D01_07),data=index)+  
   geom_point() +
   scale_color_continuous_sequential(palette = 'Heat',
@@ -298,6 +347,5 @@ age2<-ggplot(aes(x=lmGPS$fitted,y=succ,color=C7A01_01),data=index)+
   theme_bw()+
   theme(legend.position = "top")
 
-gridExtra::grid.arrange(ind12,empl2,taln2,plan2, ncol=2)
-gridExtra::grid.arrange(dacum2,sale2,high2, ncol=2)
-
+gridExtra::grid.arrange(dacum2,taln2,plan2,connect2, ncol=2)
+gridExtra::grid.arrange(empl2,sale2,high2, ncol=2)
