@@ -170,12 +170,12 @@ index<-select(work,C7_ID1,succ,C7C02_03_01,C7C02_03_02,
               C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,
               C7D01_05_01,C7D01_07,X1_1:X8) ######################
 index<-merge(index, sell, by="C7_ID1")
-index$treat<-3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8
+index$treat<-10*(3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8)
 index<-na.omit(index)
 
 ## gps
-lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7D01_05_01, index)  ##########################
-## lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+K_121+C7_IND1+percent+C7A01_01+C7D07_02+HE, index)  ##########################
+lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7D01_05_01+K_121000, index)  ##########################
+## lmGPS=lm(treat~C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_05_01+C7D01_07+K_121000, index)  ##########################
 
 summary(lmGPS)
 
@@ -261,8 +261,8 @@ bind_rows(OLS_estimate %>%  mutate(model="OLS"),
   labs(x="X, continuous variable\n(Dose)",
        y="Point estimates with their 95%CI\n(Response)",
        fill="Model", shape="Model",color="Model")+
-  scale_x_continuous(breaks=round(IPW_estimate$treat,1))+
-  coord_cartesian(ylim=c(1.8,2.8))+
+  scale_x_continuous(breaks=round(IPW_estimate$treat,0))+
+  coord_cartesian(ylim=c(1.9,2.8))+
   theme_bw()+
   geom_abline(slope=0.2351, intercept=1.1929)+
   #geom_abline(slope=0.212629, intercept=0.720476)+

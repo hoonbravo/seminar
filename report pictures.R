@@ -94,16 +94,22 @@ alpha(index[,51:54]) ##X8
 ##standarization
 stddata=index %>% 
   mutate_at(
-    vars(C7_IND1,C7A01_01,C7D07_02,HE,emplnum,C7B01_07,C7D01_05,C7D01_07,K_121000,C7D01_05_01,treat), ##############
+    vars(C7_IND1,emplnum, percent, C7A01_01,C7D07_02,HE,C7D01_05,C7D01_05_01,C7B01_07,C7D01_07,K_121000,treat), ##############
+    function(x){(x-mean(x))/sd(x)}
+  )
+
+stddata=index %>% 
+  mutate_at(
+    vars(emplnum, HE,C7D01_05,C7D01_05_01,C7B01_07,C7D01_07,K_121000,treat), ##############
     function(x){(x-mean(x))/sd(x)}
   )
 
 ##standarized beta
-#summary(lm(C7_IND1~treat,stddata)) ##low
+summary(lm(C7_IND1~treat,stddata)) ##low
 summary(lm(emplnum~treat,stddata)) 
-#summary(lm(percent~treat,stddata))  ##low
-#summary(lm(C7A01_01~treat,stddata))  ##low
-#summary(lm(C7D07_02~treat,stddata))  ##low
+summary(lm(percent~treat,stddata))  ##low
+summary(lm(C7A01_01~treat,stddata))  ##low
+summary(lm(C7D07_02~treat,stddata))  ##low
 summary(lm(HE~treat,stddata))  
 summary(lm(C7D01_05~treat,stddata)) 
 summary(lm(C7D01_05_01~treat,stddata))
@@ -116,22 +122,25 @@ summary(lm(C7_IND1~treat,stddata, weights=IPW)) ##low
 summary(lm(percent~treat,stddata, weights=IPW)) ##low
 summary(lm(C7A01_01~treat,stddata, weights=IPW)) ##low
 summary(lm(C7D07_02~treat,stddata, weights=IPW)) ##low
-summary(lm(emplnum~treat,stddata, weights=IPW)) ##high
+summary(lm(emplnum~treat,stddata, weights=IPW)) 
 summary(lm(HE~treat,stddata, weights=IPW))
 summary(lm(C7D01_05~treat,stddata, weights=IPW))  ##high
 summary(lm(C7D01_05_01~treat,stddata, weights=IPW)) ##high
-summary(lm(C7B01_07~treat,stddata, weights=IPW)) 
+summary(lm(C7B01_07~treat,stddata, weights=IPW))  ##high
 summary(lm(C7D01_07~treat,stddata, weights=IPW)) 
-summary(lm(K_121000~treat,stddata, weights=IPW))
+summary(lm(K_121000~treat,stddata, weights=IPW)) ##high
 
 
-summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+C7D01_05_01, index)) ##########################
-summary(lm(succ~treat+emplnum+HE+C7D01_05_01+C7D01_07, index)) ##########################
+summary(lm(succ~HE+C7D01_07+K_121000, index)) ##########################
+summary(lm(succ~treat+HE+C7D01_07+K_121000, index)) ##########################
+
 summary(lm(succ~treat+emplnum+HE+C7D01_05_01+C7D01_07,weights=IPW,  index)) ##########################
 summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+C7D01_05_01,weights=IPW, index)) ##########################
 
 ##reliability
-cor<-as.data.frame(cor(index[,c("succ","treat","C7_IND1","HE","percent","emplnum","C7B01_07","C7D01_05","C7D01_07","K_121000","C7D01_05_01")]))
+as.data.frame(cor(index[,c("succ","treat","C7_IND1","HE","percent",
+                                "emplnum","C7D01_05","C7D01_05_01","C7D01_07",
+                                "C7B01_07","K_121000")])) %>% round(3) ->cor
 write_xlsx(cor,path="C:\\Users\\HOON\\Desktop\\seminar\\cor.xlsx")
 
 cor_treat<-as.data.frame(cor(index[,c("treat","C7_IND1","emplnum","C7B01_07","C7D01_05","C7D01_07","K_121000")]))
