@@ -99,31 +99,35 @@ stddata=index %>%
   )
 
 ##standarized beta
-summary(lm(C7_IND1~treat,stddata)) ##low
+#summary(lm(C7_IND1~treat,stddata)) ##low
 summary(lm(emplnum~treat,stddata)) 
-summary(lm(percent~treat,stddata))  ##low
-summary(lm(C7A01_01~treat,stddata))  ##low
-summary(lm(C7D07_02~treat,stddata))  ##low
+#summary(lm(percent~treat,stddata))  ##low
+#summary(lm(C7A01_01~treat,stddata))  ##low
+#summary(lm(C7D07_02~treat,stddata))  ##low
 summary(lm(HE~treat,stddata))  
-summary(lm(C7B01_07~treat,stddata)) 
 summary(lm(C7D01_05~treat,stddata)) 
+summary(lm(C7D01_05_01~treat,stddata))
+summary(lm(C7B01_07~treat,stddata)) 
 summary(lm(C7D01_07~treat,stddata)) 
 summary(lm(K_121000~treat,stddata)) 
-summary(lm(C7D01_05_01~treat,stddata))
+
 
 summary(lm(C7_IND1~treat,stddata, weights=IPW)) ##low
-summary(lm(emplnum~treat,stddata, weights=IPW)) ##high
 summary(lm(percent~treat,stddata, weights=IPW)) ##low
 summary(lm(C7A01_01~treat,stddata, weights=IPW)) ##low
 summary(lm(C7D07_02~treat,stddata, weights=IPW)) ##low
+summary(lm(emplnum~treat,stddata, weights=IPW)) ##high
 summary(lm(HE~treat,stddata, weights=IPW))
-summary(lm(C7B01_07~treat,stddata, weights=IPW)) 
 summary(lm(C7D01_05~treat,stddata, weights=IPW))  ##high
+summary(lm(C7D01_05_01~treat,stddata, weights=IPW)) ##high
+summary(lm(C7B01_07~treat,stddata, weights=IPW)) 
 summary(lm(C7D01_07~treat,stddata, weights=IPW)) 
 summary(lm(K_121000~treat,stddata, weights=IPW))
-summary(lm(C7D01_05_01~treat,stddata, weights=IPW)) ##high
+
 
 summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+C7D01_05_01, index)) ##########################
+summary(lm(succ~treat+emplnum+HE+C7D01_05_01+C7D01_07, index)) ##########################
+summary(lm(succ~treat+emplnum+HE+C7D01_05_01+C7D01_07,weights=IPW,  index)) ##########################
 summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+C7D01_05_01,weights=IPW, index)) ##########################
 
 ##reliability

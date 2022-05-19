@@ -196,7 +196,7 @@ write_xlsx(index,path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 index<-read_excel(path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 
 #IPW
-set.seed(16)
+set.seed(18)
 z_out_ipw=zelig(succ~treat+K_121000+HE+C7B01_07+C7D01_07, ######## 
                 data=index,
                 model="ls",
@@ -262,9 +262,10 @@ bind_rows(OLS_estimate %>%  mutate(model="OLS"),
        y="Point estimates with their 95%CI\n(Response)",
        fill="Model", shape="Model",color="Model")+
   scale_x_continuous(breaks=round(IPW_estimate$treat,1))+
-  coord_cartesian(ylim=c(1.5,3))+
+  coord_cartesian(ylim=c(1.8,2.8))+
   theme_bw()+
   geom_abline(slope=0.2351, intercept=1.1929)+
+  #geom_abline(slope=0.212629, intercept=0.720476)+
   theme(legend.position = "top")
 ## write_xlsx(treat,path="C:\\Users\\HOON\\Desktop\\HCCP\\merge.xlsx")
 
