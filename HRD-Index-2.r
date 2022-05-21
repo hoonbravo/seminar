@@ -12,6 +12,7 @@
 ## install.packages("colorspace")
 ## install.packages("psych")
 ## install.packages("corrplot")
+#install.packages("lm.beta")
 library(Hmisc) 
 library(tidyverse)
 library(Zelig)
@@ -24,6 +25,7 @@ library(writexl)
 ## library(cobalt) 
 library(colorspace)
 library(psych)
+library(lm.beta)
 ## library(corrplot)
 
 ##cor, emp merge
@@ -46,6 +48,7 @@ sell<-read.table("C:\\Users\\HOON\\Desktop\\seminar\\5. TXT Data\\HCCP_KIS.txt",
   select(ID1, K_121000) %>% 
   rename("C7_ID1"="ID1")
 sell$K_121000<-log(sell$K_121000)
+sell$salesale<-exp(sell$K_121000)
 ##Cleaning
 
 ## avg of succ
@@ -63,6 +66,7 @@ work$HE<-(work$C7B02_03_04+work$C7B02_03_05+work$C7B02_03_06)/work$C7B02_01_01 #
 ## # of employee
 work<-work[(!work$C7B02_03_04==-9),]
 work$percent<-work$C7B02_01_04/work$C7B02_01_01
+work$percent<-1-work$percent
 work$emplnum<-log(work$C7B02_01_01)
 
 ##direct fee
@@ -168,13 +172,13 @@ work$X8<-(work$X8_1+work$X8_2+work$X8_3+work$X8_4)/4
 ##new data
 index<-select(work,C7_ID1,succ,C7C02_03_01,C7C02_03_02,
               C7_IND1,emplnum,percent,C7A01_01,C7D07_02,HE,C7B01_07,C7D01_05,
-              C7D01_05_01,C7D01_07,X1_1:X8) ######################
+              C7B02_01_01,C7D01_05_01,C7D01_07,X1_1:X8) ######################
 index<-merge(index, sell, by="C7_ID1")
 index$treat<-10*(3*index$X1+index$X2+index$X3+index$X4+index$X5+index$X6+index$X7+index$X8)
 index<-na.omit(index)
 
 ## gps
-lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_07+C7D01_05_01+K_121000, index)  ##########################
+lmGPS=lm(treat~emplnum+HE+C7B01_07+C7D01_05+C7D01_05_01+C7D01_07+K_121000, index)  ##########################
 ## lmGPS=lm(treat~C7_IND1+emplnum+percent+C7A01_01+C7D07_02+HE+C7B01_07+C7D01_05+C7D01_05_01+C7D01_07+K_121000, index)  ##########################
 
 summary(lmGPS)
@@ -196,8 +200,8 @@ write_xlsx(index,path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 index<-read_excel(path="C:\\Users\\HOON\\Desktop\\seminar\\index.xlsx")
 
 #IPW
-set.seed(18)
-z_out_ipw=zelig(succ~treat+K_121000+HE+C7B01_07+C7D01_07, ######## 
+set.seed(70)
+z_out_ipw=zelig(succ~treat+emplnum+HE+C7B01_07+C7D01_05+C7D01_05_01+C7D01_07+K_121000, ######## 
                 data=index,
                 model="ls",
                 weights="IPW",
@@ -226,7 +230,7 @@ IPW_estimate=Table_Sim10000 %>%
 IPW_estimate
 
 ##Simple OLS
-z_out_ols=zelig(succ~treat+K_121000+HE+C7B01_07+C7D01_07,  ############## 
+z_out_ols=zelig(succ~treat+emplnum+HE+C7B01_07+C7D01_05+C7D01_05_01+C7D01_07+K_121000,  ############## 
                 data=index,
                 model="ls",
                 cite=FALSE)

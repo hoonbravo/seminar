@@ -2,8 +2,6 @@ summary(work)
 
 ##descriptive statistics
 ######
-summary(index$succ)
-summary(index$treat)
 summary(index$C7C02_03_01)
 sd(index$C7C02_03_01)
 summary(index$C7C02_03_02)
@@ -13,23 +11,21 @@ summary(index$treat)
 sd(index$treat)
 
 summary(index$C7_IND1)
-summary(index$C7B02_03_04)
-sd(index$C7B02_03_04)
+sd(index$C7_IND1)
+summary(index$C7B02_01_01)
+sd(index$C7B02_01_01)
+summary(index$percent)
+summary(index$C7A01_01)
+sd(index$C7A01_01)
+summary(index$C7D07_02)
+summary(index$C7B01_07)
 summary(index$HE)
-sd(index$HE)
-hist(index$HE)
 summary(index$C7B01_07)
 summary(index$C7D01_05)
-summary(index$C7D01_07)
-summary(0.001*index$K_121000)
-sd(index$K_121000)
-summary(index$percent)
-sd(index$percent)
-summary(2017-index$C7A01_01)
-sd(2017-index$C7A01_01)
-summary(index$C7D07_02)
-sd(index$C7D07_02)
 summary(index$C7D01_05_01)
+summary(index$C7D01_07)
+summary(0.000001*index$salesale)
+sd(0.000001*index$salesale)
 
 summary(index$gps)
 summary(pnorm(index$gps))
@@ -42,6 +38,7 @@ summary(index$IPW)
 hist(index$succ)
 hist(index$C7_IND1) ##binary
 hist(index$emplnum)
+hist(work$C7B02_01_01)
 hist(log(index$percent))  
 hist(index$C7A01_01)
 hist(index$C7D07_02)  ####no
@@ -91,16 +88,112 @@ alpha(index[,41:43]) ##X6
 alpha(index[,45:49]) ##X7
 alpha(index[,51:54]) ##X8
 
+##reliability
+as.data.frame(cor(index[,c("succ","treat","C7_IND1","HE","percent",
+                           "emplnum","C7D01_05","C7D01_05_01","C7D01_07",
+                           "C7B01_07","K_121000")])) %>% round(3) ->cor
+write_xlsx(cor,path="C:\\Users\\HOON\\Desktop\\seminar\\cor.xlsx")
+
+as.data.frame(cor(index[,c("succ","treat","C7_IND1","emplnum","percent","C7A01_01",
+                           "C7D07_02","HE","C7B01_07","C7D01_05","C7D01_05_01",
+                           "C7D01_07","K_121000")])) %>% round(3) ->cor_treat
+write_xlsx(cor_treat,path="C:\\Users\\HOON\\Desktop\\seminar\\cor_treat.xlsx")
+
+cor
+cor.test(index$succ,index$treat)
+cor.test(index$succ,index$C7_IND1) ##low
+cor.test(index$succ,index$emplnum)
+cor.test(index$succ,index$percent) ##low
+cor.test(index$succ,index$C7A01_01) ##low
+cor.test(index$succ,index$C7D07_02) ##low
+cor.test(index$succ,index$HE)
+cor.test(index$succ,index$C7B01_07)
+cor.test(index$succ,index$C7D01_05)
+cor.test(index$succ,index$C7D01_05_01)
+cor.test(index$succ,index$C7D01_07)
+cor.test(index$succ,index$K_121000)
+
+cor.test(index$treat,index$C7_IND1) ##low
+cor.test(index$treat,index$emplnum)
+cor.test(index$treat,index$percent) ##low
+cor.test(index$treat,index$C7A01_01) ##low
+cor.test(index$treat,index$C7D07_02) ##low
+cor.test(index$treat,index$HE)
+cor.test(index$treat,index$C7B01_07)
+cor.test(index$treat,index$C7D01_05)
+cor.test(index$treat,index$C7D01_05_01)
+cor.test(index$treat,index$C7D01_07)
+cor.test(index$treat,index$K_121000)
+
+cor.test(index$C7_IND1,index$emplnum)
+cor.test(index$C7_IND1,index$percent) ##low
+cor.test(index$C7_IND1,index$C7A01_01) ##low
+cor.test(index$C7_IND1,index$C7D07_02) ##low
+cor.test(index$C7_IND1,index$HE)
+cor.test(index$C7_IND1,index$C7B01_07)
+cor.test(index$C7_IND1,index$C7D01_05)
+cor.test(index$C7_IND1,index$C7D01_05_01)
+cor.test(index$C7_IND1,index$C7D01_07)
+cor.test(index$C7_IND1,index$K_121000)
+
+cor.test(index$emplnum,index$percent) ##low
+cor.test(index$emplnum,index$C7A01_01) ##low
+cor.test(index$emplnum,index$C7D07_02) ##low
+cor.test(index$emplnum,index$HE)
+cor.test(index$emplnum,index$C7B01_07)
+cor.test(index$emplnum,index$C7D01_05)
+cor.test(index$emplnum,index$C7D01_05_01)
+cor.test(index$emplnum,index$C7D01_07)
+cor.test(index$emplnum,index$K_121000)
+
+cor.test(index$percent,index$C7A01_01) ##low
+cor.test(index$percent,index$C7D07_02) ##low
+cor.test(index$percent,index$HE)
+cor.test(index$percent,index$C7B01_07)
+cor.test(index$percent,index$C7D01_05)
+cor.test(index$percent,index$C7D01_05_01)
+cor.test(index$percent,index$C7D01_07)
+cor.test(index$percent,index$K_121000)
+
+cor.test(index$C7A01_01,index$C7D07_02) ##low
+cor.test(index$C7A01_01,index$HE)
+cor.test(index$C7A01_01,index$C7B01_07)
+cor.test(index$C7A01_01,index$C7D01_05)
+cor.test(index$C7A01_01,index$C7D01_05_01)
+cor.test(index$C7A01_01,index$C7D01_07)
+cor.test(index$C7A01_01,index$K_121000)
+
+cor.test(index$C7D07_02,index$HE)
+cor.test(index$C7D07_02,index$C7B01_07)
+cor.test(index$C7D07_02,index$C7D01_05)
+cor.test(index$C7D07_02,index$C7D01_05_01)
+cor.test(index$C7D07_02,index$C7D01_07)
+cor.test(index$C7D07_02,index$K_121000)
+
+cor.test(index$HE,index$C7B01_07)
+cor.test(index$HE,index$C7D01_05)
+cor.test(index$HE,index$C7D01_05_01)
+cor.test(index$HE,index$C7D01_07)
+cor.test(index$HE,index$K_121000)
+
+cor.test(index$C7B01_07,index$C7D01_05)
+cor.test(index$C7B01_07,index$C7D01_05_01)
+cor.test(index$C7B01_07,index$C7D01_07)
+cor.test(index$C7B01_07,index$K_121000)
+
+cor.test(index$C7D01_05,index$C7D01_05_01)
+cor.test(index$C7D01_05,index$C7D01_07)
+cor.test(index$C7D01_05,index$K_121000)
+
+cor.test(index$C7D01_05_01,index$C7D01_07)
+cor.test(index$C7D01_05_01,index$K_121000)
+
+cor.test(index$C7D01_07,index$K_121000)
+
 ##standarization
 stddata=index %>% 
   mutate_at(
     vars(C7_IND1,emplnum, percent, C7A01_01,C7D07_02,HE,C7D01_05,C7D01_05_01,C7B01_07,C7D01_07,K_121000,treat), ##############
-    function(x){(x-mean(x))/sd(x)}
-  )
-
-stddata=index %>% 
-  mutate_at(
-    vars(emplnum, HE,C7D01_05,C7D01_05_01,C7B01_07,C7D01_07,K_121000,treat), ##############
     function(x){(x-mean(x))/sd(x)}
   )
 
@@ -111,9 +204,9 @@ summary(lm(percent~treat,stddata))  ##low
 summary(lm(C7A01_01~treat,stddata))  ##low
 summary(lm(C7D07_02~treat,stddata))  ##low
 summary(lm(HE~treat,stddata))  
+summary(lm(C7B01_07~treat,stddata)) 
 summary(lm(C7D01_05~treat,stddata)) 
 summary(lm(C7D01_05_01~treat,stddata))
-summary(lm(C7B01_07~treat,stddata)) 
 summary(lm(C7D01_07~treat,stddata)) 
 summary(lm(K_121000~treat,stddata)) 
 
@@ -124,51 +217,23 @@ summary(lm(C7A01_01~treat,stddata, weights=IPW)) ##low
 summary(lm(C7D07_02~treat,stddata, weights=IPW)) ##low
 summary(lm(emplnum~treat,stddata, weights=IPW)) 
 summary(lm(HE~treat,stddata, weights=IPW))
+summary(lm(C7B01_07~treat,stddata, weights=IPW))  ##high
 summary(lm(C7D01_05~treat,stddata, weights=IPW))  ##high
 summary(lm(C7D01_05_01~treat,stddata, weights=IPW)) ##high
-summary(lm(C7B01_07~treat,stddata, weights=IPW))  ##high
 summary(lm(C7D01_07~treat,stddata, weights=IPW)) 
 summary(lm(K_121000~treat,stddata, weights=IPW)) ##high
 
 
-summary(lm(succ~HE+C7D01_07+K_121000, index)) ##########################
-summary(lm(succ~treat+HE+C7D01_07+K_121000, index)) ##########################
+model1<-lm(succ~emplnum+HE+C7B01_07+C7D01_05+C7D01_05_01+C7D01_07+K_121000, index) ##########################
+summary(model1)
+lm.beta(model1)$coef %>% round(3)
+model2<-lm(succ~treat+emplnum+HE+C7B01_07+C7D01_05+C7D01_05_01+C7D01_07+K_121000, index) ##########################
+summary(model2)
+lm.beta(model2)
 
 summary(lm(succ~treat+emplnum+HE+C7D01_05_01+C7D01_07,weights=IPW,  index)) ##########################
 summary(lm(succ~treat+C7_IND1+HE+percent+emplnum+C7B01_07+C7D01_05+C7D01_07+K_121000+C7D01_05_01,weights=IPW, index)) ##########################
 
-##reliability
-as.data.frame(cor(index[,c("succ","treat","C7_IND1","HE","percent",
-                                "emplnum","C7D01_05","C7D01_05_01","C7D01_07",
-                                "C7B01_07","K_121000")])) %>% round(3) ->cor
-write_xlsx(cor,path="C:\\Users\\HOON\\Desktop\\seminar\\cor.xlsx")
-
-cor_treat<-as.data.frame(cor(index[,c("treat","C7_IND1","emplnum","C7B01_07","C7D01_05","C7D01_07","K_121000")]))
-write_xlsx(cor_treat,path="C:\\Users\\HOON\\Desktop\\seminar\\cor_treat.xlsx")
-
-cor
-cor.test(index$succ,index$treat)
-cor.test(index$succ,index$C7_IND1) ##low
-cor.test(index$succ,index$HE)
-cor.test(index$succ,index$percent) ##low
-cor.test(index$succ,index$C7A01_01) ##low
-cor.test(index$succ,index$emplnum)
-cor.test(index$succ,index$C7B01_07)
-cor.test(index$succ,index$C7D01_05)
-cor.test(index$succ,index$C7D01_05_01)
-cor.test(index$succ,index$C7D01_07)
-cor.test(index$succ,index$K_121000)
-
-cor.test(index$treat,index$C7_IND1) ##low
-cor.test(index$treat,index$HE)
-cor.test(index$treat,index$percent) ##low
-cor.test(index$treat,index$C7A01_01) ##low
-cor.test(index$treat,index$emplnum)
-cor.test(index$treat,index$C7B01_07)
-cor.test(index$treat,index$C7D01_05)
-cor.test(index$treat,index$C7D01_05_01)
-cor.test(index$treat,index$C7D01_07)
-cor.test(index$treat,index$K_121000)
 
 ### ggplot
 #######
@@ -221,7 +286,7 @@ connect<-ggplot(aes(x=treat,y=succ,color=C7D01_05_01),data=index)+
                                     begin = .2) +
   labs(x="X, Treat",
        y="Y, Job Performance",
-       col="Linkage of HR Pland with Business Strategy") +
+       col="Linkage of HR Plan with Business Strategy") +
   theme_bw()+
   theme(legend.position = "top")
 
@@ -261,12 +326,32 @@ age<-ggplot(aes(x=treat,y=succ,color=C7A01_01),data=index)+
                                     begin = .2) +
   labs(x="X, Treat",
        y="Y, Job Performance",
-       col="Proportion of High Education") +
+       col="Age of Corporate") +
   theme_bw()+
   theme(legend.position = "top")
 
-gridExtra::grid.arrange(dacum,taln,plan,connect, ncol=2)
-gridExtra::grid.arrange(empl,sale,high, ncol=2)
+per<-ggplot(aes(x=treat,y=succ,color=percent),data=index)+  
+  geom_point() +
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Proportion of Temporary Employee") +
+  theme_bw()+
+  theme(legend.position = "top")
+
+nozo<-ggplot(aes(x=treat,y=succ,color=C7D07_02),data=index)+  
+  geom_point() +
+  scale_color_continuous_sequential(palette = 'Heat',
+                                    begin = .2) +
+  labs(x="X, Treat",
+       y="Y, Job Performance",
+       col="Union in Corporate") +
+  theme_bw()+
+  theme(legend.position = "top")
+
+gridExtra::grid.arrange(ind1,empl,per,age,nozo,high, ncol=3)
+gridExtra::grid.arrange(taln,plan,connect,dacum,sale, ncol=3)
 
 ### ggplot_fitted
 #######
