@@ -350,8 +350,8 @@ nozo<-ggplot(aes(x=treat,y=succ,color=C7D07_02),data=index)+
   theme_bw()+
   theme(legend.position = "top")
 
-gridExtra::grid.arrange(ind1,empl,per,age,nozo,high, ncol=3)
-gridExtra::grid.arrange(taln,plan,connect,dacum,sale, ncol=3)
+gridExtra::grid.arrange(empl,high,sale, ncol=2)
+gridExtra::grid.arrange(taln,plan,connect,dacum, ncol=2)
 
 ### ggplot_fitted
 #######
